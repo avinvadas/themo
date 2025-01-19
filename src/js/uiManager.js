@@ -13,6 +13,14 @@ export const uiManager = {
     addColorTickerFunctionality,
     copyToClipboard
 };
+function safeQuerySelector(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+        console.warn(`Element not found: ${selector}`);
+        return null;
+    }
+    return element;
+}
 
 /* Creating color swatches in the palettes */
 export function createColorSwatches(colorScale, containerId, contrastRatios, contrastMarkers) {
@@ -297,43 +305,31 @@ export function copyToClipboard(text, button) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const colorSecondary = document.getElementById('color-secondary');
-    const copyIcon = colorSecondary.querySelector('.copy-icon');
-    const checkIcon = colorSecondary.querySelector('.check-icon');
+    const colorSecondary = safeQuerySelector('#color-secondary');
+    if (colorSecondary) {
+        const copyIcon = colorSecondary.querySelector('.copy-icon');
+        const checkIcon = colorSecondary.querySelector('.check-icon');
 
-    colorSecondary.addEventListener('mouseenter', function() {
-        copyIcon.style.display = 'block';
-    });
-
-    colorSecondary.addEventListener('mouseleave', function() {
-        if (checkIcon.style.display !== 'block') {
-            copyIcon.style.display = 'none';
-        }
-    });
-
-    colorSecondary.addEventListener('focus', function() {
-        copyIcon.style.display = 'block';
-    });
-
-    colorSecondary.addEventListener('blur', function() {
-        if (checkIcon.style.display !== 'block') {
-            copyIcon.style.display = 'none';
-        }
-    });
-
-    // Function to show checkIcon and hide copyIcon
-    function showCheckIcon() {
-        copyIcon.style.display = 'none';
-        checkIcon.style.display = 'block';
-        setTimeout(function() {
-            checkIcon.style.display = 'none';
-            if (colorSecondary.matches(':hover') || colorSecondary.matches(':focus')) {
+        if (copyIcon && checkIcon) {
+            colorSecondary.addEventListener('mouseenter', function() {
                 copyIcon.style.display = 'block';
-            }
-        }, 2000); // Adjust the timeout duration as needed
+            });
+
+            colorSecondary.addEventListener('mouseleave', function() {
+                if (checkIcon.style.display !== 'block') {
+                    copyIcon.style.display = 'none';
+                }
+            });
+
+            colorSecondary.addEventListener('focus', function() {
+                copyIcon.style.display = 'block';
+            });
+
+            colorSecondary.addEventListener('blur', function() {
+                if (checkIcon.style.display !== 'block') {
+                    copyIcon.style.display = 'none';
+                }
+            });
+        }
     }
-
-    // Example usage: Call showCheckIcon when needed
-    // showCheckIcon();
 });
-

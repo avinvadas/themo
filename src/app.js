@@ -60,9 +60,10 @@ const tertiaryColorObserver = {
 const quaternaryColorObserver = {
     update({ quaternaryColor: updatedQuaternaryColor }) {
         if (updatedQuaternaryColor) {
-            quaternaryColor = updatedQuaternaryColor; // Update the global variable
-            updateUIElements(quaternaryColor, 'quaternary');
-            updateAllScalesRows();
+            quaternaryColor = updatedQuaternaryColor;
+            console.log('Quaternary color observer updated:', quaternaryColor.to('srgb').toString({ format: "hex" }));
+            updateUIElements();
+            updateAllScalesRows(primaryColor, secondaryColor, tertiaryColor, quaternaryColor);
         }
     }
 };
@@ -71,6 +72,15 @@ const quaternaryColorObserver = {
 colorManager.addObserver(secondaryColorObserver);
 colorManager.addObserver(tertiaryColorObserver);
 colorManager.addObserver(quaternaryColorObserver);
+
+function testQuaternaryColorUpdate() {
+    const testColor = new Color('lch', [50, 50, 180]);
+    colorManager.updateQuaternaryColor();
+    console.log('Test quaternary color update triggered');
+}
+
+// Call this function after your initialization code
+testQuaternaryColorUpdate();
 
 
 const iconSvgCompLong = '<svg class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g><path d="M17.202,37.029C9.346,35.701 3.362,28.865 3.362,20.631C3.362,13.163 8.331,6.655 15.44,4.635C15.911,2.555 17.772,1 19.993,1C22.569,1 24.661,3.092 24.661,5.668C24.661,7.99 22.961,9.919 20.738,10.276L20.738,33.09C22.037,33.416 23,34.592 23,35.992C23,37.643 21.66,38.983 20.008,38.983C18.722,38.983 17.624,38.169 17.202,37.029ZM15.578,7.186C9.82,9.073 5.842,14.468 5.842,20.631C5.842,27.557 10.819,33.321 17.391,34.543C17.782,33.838 18.45,33.307 19.248,33.098L19.248,10.276C17.534,10.001 16.13,8.791 15.578,7.186ZM19.993,2.617C18.309,2.617 16.942,3.984 16.942,5.668C16.942,7.352 18.309,8.719 19.993,8.719C21.677,8.719 23.044,7.352 23.044,5.668C23.044,3.984 21.677,2.617 19.993,2.617Z"/><g><path d="M19.993,37.262L19.993,34.782C27.808,34.782 34.144,28.446 34.144,20.631C34.144,14.031 29.582,8.308 23.149,6.836L23.702,4.419C31.263,6.149 36.624,12.875 36.624,20.631C36.624,29.816 29.178,37.262 19.993,37.262Z" style="fill-opacity:0.33;"/></g></g></svg>';
@@ -507,13 +517,13 @@ function setupRows() {
         keyColors: [secondaryColor, primaryColor, tertiaryColor],
         containerId: 'general-color-row-container'
     });
-    createAndAddRow(generalColorRow, 'Split', 'general-color-row');
+    //createAndAddRow(generalColorRow, 'Split', 'general-color-row');
 
     // Add icons to rows
     appendIconToRow('Analogous wide', iconLongRange);
     appendIconToRow('Analogous narrow', iconShortRange);
     appendIconToRow('Analogous Full circ.', iconFullRange);
-    appendIconToRow('Split', iconSplitRange);
+   // appendIconToRow('Split', iconSplitRange);
     
 
 }
@@ -636,6 +646,7 @@ function updatePrimaryColor(colorValue) {
         primaryColor = newPrimaryColor;
         const newSecondaryColor = recalculateSecondaryColor(primaryColor, hueDif, secondaryColor);
         secondaryColor = newSecondaryColor;
+        
         colorManager.setPrimaryColor(primaryColor);
         colorManager.setSecondaryColor(secondaryColor);
 
@@ -649,9 +660,10 @@ function updatePrimaryColor(colorValue) {
     updateContrastCheck();
 }
 
+
 // Updated function to update all UI elements
 function updateUIElements() {
-    // Validate primaryColor, secondaryColor, and tertiaryColor
+    // Validate primaryColor, secondaryColor, tertiaryColor, and quaternaryColor
     if (!primaryColor || !primaryColor.lch) {
         console.error('Invalid primaryColor in updateUIElements:', primaryColor);
         return;
@@ -661,7 +673,7 @@ function updateUIElements() {
         return;
     }
     if (!tertiaryColor || !tertiaryColor.lch) {
-       /* console.warn('Missing or invalid tertiaryColor. Generating from secondaryColor.'); */
+        console.warn('Missing or invalid tertiaryColor. Generating from secondaryColor.');
         tertiaryColor = colorUtils.relateColor(
             secondaryColor,
             secondaryColor.lch.l,
@@ -669,12 +681,19 @@ function updateUIElements() {
             (secondaryColor.lch.h + 120) % 360
         );
     }
+    if (!quaternaryColor || !quaternaryColor.lch) {
+        console.warn('Missing or invalid quaternaryColor. It will not be updated.');
+    }
 
     // Update CSS variables
     document.documentElement.style.setProperty('--color-primary', primaryColor.to('srgb').toString({ format: "hex" }));
     document.documentElement.style.setProperty('--color-secondary', secondaryColor.to('srgb').toString({ format: "hex" }));
-    if (tertiaryColor) {
-        document.documentElement.style.setProperty('--color-tertiary', tertiaryColor.to('srgb').toString({ format: "hex" }));
+    document.documentElement.style.setProperty('--color-tertiary', tertiaryColor.to('srgb').toString({ format: "hex" }));
+    if (quaternaryColor && quaternaryColor.lch) {
+        document.documentElement.style.setProperty('--color-quaternary', quaternaryColor.to('srgb').toString({ format: "hex" }));
+        console.log('Quaternary color CSS variable updated:', quaternaryColor.to('srgb').toString({ format: "hex" }));
+    } else {
+        console.warn('Quaternary color is not available for CSS variable update');
     }
 
     // Update primary color inputs
@@ -692,10 +711,13 @@ function updateUIElements() {
         rows.forEach((item, index) => {
             try {
                 if (item.row && typeof item.row.update === 'function') {
-                    // Pass tertiaryColor along with primary and secondary
-                    item.row.update(primaryColor, secondaryColor, tertiaryColor);
+                    if (item.row instanceof GeneralColorRow) {
+                        item.row.update({ primaryColor, secondaryColor, tertiaryColor, quaternaryColor });
+                    } else {
+                        item.row.update(primaryColor, secondaryColor, tertiaryColor);
+                    }
                 } else {
-                   /* console.warn(`Row ${index} does not have a valid update method:`, item.row); */
+                    console.warn(`Row ${index} does not have a valid update method:`, item.row);
                 }
             } catch (error) {
                 console.error(`Error updating row ${index}:`, error);
@@ -708,10 +730,13 @@ function updateUIElements() {
 
     // Log warnings for zero chroma
     if (secondaryColor.lch.c === 0) {
-      /*  console.warn('Warning: Secondary color chroma is zero'); */
+        console.warn('Warning: Secondary color chroma is zero');
     }
     if (tertiaryColor && tertiaryColor.lch.c === 0) {
-      /*  console.warn('Warning: Tertiary color chroma is zero'); */
+        console.warn('Warning: Tertiary color chroma is zero');
+    }
+    if (quaternaryColor && quaternaryColor.lch.c === 0) {
+        console.warn('Warning: Quaternary color chroma is zero');
     }
 }
 
@@ -856,7 +881,6 @@ function handleSecondaryLightnessChange(event) {
 
 
 function handleHueChange(event) {
-
     switch(event.target.value) {
         case 'complementary': 
             hueDif = 179.5; 
@@ -877,10 +901,10 @@ function handleHueChange(event) {
             iconSplitRange = iconSvgQuadSplit;
             break;
         case 'analogous': 
-            hueDif = 45; 
-            iconShortRange = iconSvgAnaShort;
-            iconLongRange = iconSvgAnaLong;
-            iconSplitRange = iconSvgAnaSplit;
+            hueDif = 45;
+            iconShortRange = iconSvgAnaShort; 
+            iconLongRange = iconSvgAnaLong; 
+            iconSplitRange = iconSvgAnaSplit; 
             break;
     }
     appendIconToRow("Analogous wide", iconLongRange);
@@ -888,8 +912,8 @@ function handleHueChange(event) {
     appendIconToRow("Analogous full circ.", iconFullRange);
     appendIconToRow("Split", iconSplitRange);
 
-    // Calculate new secondary color
-    const newSecondaryColor = recalculateSecondaryColor(primaryColor, hueDif, secondaryColor);
+    // Calculate new secondary color, passing true for hueChangeOnly
+    const newSecondaryColor = recalculateSecondaryColor(primaryColor, hueDif, secondaryColor, true);
 
     if (!newSecondaryColor || !newSecondaryColor.lch || typeof newSecondaryColor.lch.h === 'undefined') {
         console.error('Invalid secondary color calculated:', newSecondaryColor);
@@ -897,9 +921,6 @@ function handleHueChange(event) {
     }
 
     secondaryColor = newSecondaryColor;
-
-    // Log secondary color for debugging
-   
 
     // Update secondary color in ColorManager
     colorManager.setSecondaryColor(secondaryColor);
@@ -1121,15 +1142,23 @@ function initializeMainColorInput() {
 }
 
 
-function recalculateSecondaryColor(primaryColor, hueDif, currentSecondaryColor) {
-
+function recalculateSecondaryColor(primaryColor, hueDif, currentSecondaryColor, hueChangeOnly = false) {
     const newHue = colorUtils.setHue(primaryColor.lch.h, hueDif);
     
-    // Adjust chroma and lightness based on primary color changes
-    const chromaRatio = primaryColor.lch.c / lastPrimaryChroma;
-    const lightnessRatio = primaryColor.lch.l / lastPrimaryLightness;
-    const newChroma = Math.min(Math.max(lastUserChroma * chromaRatio, 1), 132);
-    const newLightness = Math.min(Math.max(lastUserLightness * lightnessRatio, 0), 100);
+    let newChroma, newLightness;
+
+    if (hueChangeOnly) {
+        // Only change the hue, keep current chroma and lightness
+        newChroma = currentSecondaryColor.lch.c;
+        newLightness = currentSecondaryColor.lch.l;
+    } else {
+        // Adjust chroma and lightness based on primary color changes
+        const chromaRatio = primaryColor.lch.c / lastPrimaryChroma;
+        const lightnessRatio = primaryColor.lch.l / lastPrimaryLightness;
+        newChroma = Math.min(Math.max(lastUserChroma * chromaRatio, 1), 132);
+        newLightness = Math.min(Math.max(lastUserLightness * lightnessRatio, 0), 100);
+    }
+
     const newSecondaryColor = colorUtils.relateColor(
         primaryColor,
         newLightness,
@@ -1137,9 +1166,12 @@ function recalculateSecondaryColor(primaryColor, hueDif, currentSecondaryColor) 
         newHue
     );
 
-    // Update last user values
-    lastUserChroma = newChroma;
-    lastUserLightness = newLightness;
+    // Update last user values only if not just changing hue
+    if (!hueChangeOnly) {
+        lastUserChroma = newChroma;
+        lastUserLightness = newLightness;
+    }
+
     return newSecondaryColor;
 }
 

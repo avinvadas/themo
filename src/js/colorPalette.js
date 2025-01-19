@@ -729,7 +729,7 @@ export class GeneralColorRow extends BaseColorRow {
             steps: 6,
             interpolation: 'linear',
             keyColors: [],
-            segCtrl: 'complementary', // Default segCtrl state
+            segCtrl: 'complementary',
             ...config
         });
 
@@ -738,7 +738,7 @@ export class GeneralColorRow extends BaseColorRow {
             return;
         }
 
-        this.colors = this.generateColors(); // Ensure this method initializes colors
+        this.colors = this.generateColors();
 
         if (!this.colors || this.colors.length === 0) {
             console.error('colors array is not initialized in GeneralColorRow constructor');
@@ -820,35 +820,42 @@ export class GeneralColorRow extends BaseColorRow {
         this.updateSwatches();
     }
 
-    update(primaryColor, secondaryColor, tertiaryColor) {
-        console.log('Updating GeneralColorRow with:', { primaryColor, secondaryColor, tertiaryColor });
+    update(colors) {
+        console.log('Updating GeneralColorRow with:', colors);
 
-        if (!primaryColor || !primaryColor.lch) {
-            console.error('Invalid primaryColor in GeneralColorRow.update:', primaryColor);
-            return;
-        }
-        if (!secondaryColor || !secondaryColor.lch) {
-            console.error('Invalid secondaryColor in GeneralColorRow.update:', secondaryColor);
-            return;
-        }
-        if (!tertiaryColor || !tertiaryColor.lch) {
-            console.error('Invalid tertiaryColor in GeneralColorRow.update:', tertiaryColor);
-            return;
-        }
+    const { primaryColor, secondaryColor, tertiaryColor, quaternaryColor } = colors;
 
-        this.config.keyColors = [tertiaryColor, primaryColor, secondaryColor];
-        console.log('general row updated key colors:', this.config.keyColors);
-        this.colors = this.generateColors();
-        console.log('general row updated colors:', this.colors);
-        this.calculateContrastInfo();
-        console.log('generalColorRow updateSwatches called!');
-        this.updateSwatches();
-
-        // Update CSS variables
-        document.documentElement.style.setProperty('--color-primary', primaryColor.to('srgb').toString({ format: 'hex' }));
-        document.documentElement.style.setProperty('--color-secondary', secondaryColor.to('srgb').toString({ format: 'hex' }));
-        document.documentElement.style.setProperty('--color-tertiary', tertiaryColor.to('srgb').toString({ format: 'hex' }));
+    if (!primaryColor || !primaryColor.lch) {
+        console.error('Invalid primaryColor in GeneralColorRow.update:', primaryColor);
+        return;
     }
+    if (!secondaryColor || !secondaryColor.lch) {
+        console.error('Invalid secondaryColor in GeneralColorRow.update:', secondaryColor);
+        return;
+    }
+    if (!tertiaryColor || !tertiaryColor.lch) {
+        console.error('Invalid tertiaryColor in GeneralColorRow.update:', tertiaryColor);
+        return;
+    }
+    if (!quaternaryColor || !quaternaryColor.lch) {
+        console.error('Invalid quaternaryColor in GeneralColorRow.update:', quaternaryColor);
+        return;
+    }
+
+    this.config.keyColors = [tertiaryColor, primaryColor, secondaryColor, quaternaryColor];
+    console.log('general row updated key colors:', this.config.keyColors);
+    this.colors = this.generateColors();
+    console.log('general row updated colors:', this.colors);
+    this.calculateContrastInfo();
+    console.log('generalColorRow updateSwatches called!');
+    this.updateSwatches();
+
+    // Update CSS variables
+    document.documentElement.style.setProperty('--color-primary', primaryColor.to('srgb').toString({ format: 'hex' }));
+    document.documentElement.style.setProperty('--color-secondary', secondaryColor.to('srgb').toString({ format: 'hex' }));
+    document.documentElement.style.setProperty('--color-tertiary', tertiaryColor.to('srgb').toString({ format: 'hex' }));
+    document.documentElement.style.setProperty('--color-quaternary', quaternaryColor.to('srgb').toString({ format: 'hex' }));
+}
 
     createSwatches(containerIdPrefix = 'general-color-row', label = '') {
         console.log('generalColorRow createSwatches() started');
@@ -895,3 +902,4 @@ export class GeneralColorRow extends BaseColorRow {
         createColorSwatches(srgbColors, this.containerId, this.contrastRatios);
     }
 }
+

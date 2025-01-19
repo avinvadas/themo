@@ -19,11 +19,11 @@ export default class ColorManager {
         }
     }
 
-    setSecondaryColor(color, segCtrl) {
+      setSecondaryColor(color) {
         if (color && color instanceof Color) {
             this.secondaryColor = color;
-            this.updateTertiaryColor(segCtrl);
-            this.updateQuaternaryColor(segCtrl);
+            this.updateTertiaryColor();
+            this.updateQuaternaryColor();
             this.notify();
         }
     }
@@ -84,11 +84,13 @@ export default class ColorManager {
             const quaternaryC = this.primaryColor.lch.c;
         
             this.quaternaryColor = new Color('lch', [quaternaryL, quaternaryC, quaternaryHue]);
+            console.log('Quaternary color updated in ColorManager:', this.quaternaryColor.to('srgb').toString({ format: "hex" }));
             this.notify();
         }
     }
 
     notify() {
+       
         this.observerManager.notifyObservers({
             primaryColor: this.primaryColor,
             secondaryColor: this.secondaryColor,
