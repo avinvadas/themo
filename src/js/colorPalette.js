@@ -5,6 +5,7 @@ Calculation of scales and harmony palettes,
  import * as colorUtils from './colorUtils.js';
 import { createColorSwatches } from './uiManager.js';
 import * as uiManager  from './uiManager.js';
+import * as colorManager from './colorManager.js';
 
 
 class BaseColorRow {
@@ -540,6 +541,41 @@ export class ScalesRow extends BaseColorRow {
         });
 
     }
+
+    static createIndicationRow(color, type) {
+        // Define base configuration
+        const config = {
+            steps: 3, // Only 3 swatches
+            interpolation: 'linear',
+            includeSource: true,
+            isNeutral: false
+        };
+
+        // Create a new color with the fixed hue for each type, but keeping input color's lightness and chroma
+        let baseColor;
+        switch (type) {
+            case 'alert':
+                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 0]); // Red
+                break;
+            case 'warning':
+                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 45]); // Yellow
+                break;
+            case 'success':
+                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 120]); // Green
+                break;
+            case 'info':
+                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 210]); // Blue
+                break;
+        }
+
+        // Set start and end points using the baseColor
+        config.startPoint = { l: baseColor.lch.l - 20, c: baseColor.lch.c, h: baseColor.lch.h };
+        config.endPoint = { l: baseColor.lch.l + 20, c: baseColor.lch.c, h: baseColor.lch.h };
+        
+        const row = new ScalesRow(baseColor, config);
+        row.createSwatches('indication-scale', `${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        return row;
+    }
 }
 
 export class HarmonicColorRow extends BaseColorRow {
@@ -900,6 +936,177 @@ export class GeneralColorRow extends BaseColorRow {
 
         const srgbColors = this.colors.map(color => color.to('srgb').toString({ format: 'hex' }));
         createColorSwatches(srgbColors, this.containerId, this.contrastRatios);
+    }
+}
+
+export class IndicationRow extends ScalesRow {
+    constructor(color, type) {
+        // Define fixed hues for each type
+        const hueMap = {
+            alert: 15,    // Red (0-30°)
+            warning: 75,  // Yellow (60-90°)
+            success: 115, // Green (100-130°)
+            info: 255,    // Blue (240-270°)
+        };
+
+        // Create base color with fixed hue but keep input l,c
+        const baseColor = new colorUtils.Color('lch', [
+            color.lch.l,
+            color.lch.c,
+            hueMap[type]
+        ]);
+
+        // Configure the row using ScalesRow's constructor
+        super(baseColor, {
+            steps: 3,
+            interpolation: 'linear',
+            includeSource: true,
+            startPoint: { 
+                l: baseColor.lch.l - 20, 
+                c: baseColor.lch.c, 
+                h: hueMap[type] 
+            },
+            endPoint: { 
+                l: baseColor.lch.l + 20, 
+                c: baseColor.lch.c, 
+                h: hueMap[type] 
+            }
+        });
+
+        this.type = type;
+        this.hueMap = hueMap;
+    }
+
+    update(primaryColor, secondaryColor) {
+        if (!primaryColor || !secondaryColor) return;
+
+        const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
+        const maxChroma = Math.max(primaryColor.lch.c, secondaryColor.lch.c);
+
+        // Update source color while maintaining fixed hue
+        this.sourceColor = new colorUtils.Color('lch', [
+            avgLightness,
+            maxChroma,
+            this.hueMap[this.type]
+        ]);
+
+        // Update start and end points
+        this.config.startPoint = {
+            l: avgLightness - 20,
+            c: maxChroma,
+            h: this.hueMap[this.type]
+        };
+        this.config.endPoint = {
+            l: avgLightness + 20,
+            c: maxChroma,
+            h: this.hueMap[this.type]
+        };
+
+        this.generateScale();
+        this.updateSwatches();
+    }
+
+    createSwatches(containerIdPrefix = 'indication-scale', label = '') {
+        if (!this.containerId) {
+            this.containerId = `${containerIdPrefix}-${this.type}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        const container = document.getElementById(this.containerId);
+        if (container) {
+            container.classList.add('harmony-row-height');
+        }
+        
+        super.createSwatches(this.containerId, label);
+    }
+
+    updateSwatches() {
+        const container = document.getElementById(this.containerId);
+        if (!container) {
+            console.error(`Container not found for ${this.type} indication swatches`);
+            return;
+        }
+
+        container.innerHTML = '';
+        
+        this.colors.forEach((color, index) => {
+            const swatch = document.createElement('button');
+            swatch.className = 'color-swatch';
+            swatch.type = 'button';
+            
+            // Set background color and get hex value
+            const hexColor = color.to('srgb').toString({ format: 'hex' });
+            swatch.style.backgroundColor = hexColor;
+            
+            // Add proper ARIA attributes
+            swatch.setAttribute('aria-label', `${this.type} color ${hexColor}. Click to copy`);
+            swatch.setAttribute('role', 'button');
+            swatch.setAttribute('tabindex', '0');
+            
+            // Calculate lightness for contrast
+            const lightness = color.lch.l;
+            
+            // Add hover-click interactions with embedded SVGs
+            const copyIcon = uiManager.createCopyIcon();
+            copyIcon.style.color = lightness > 50 ? 'black' : 'white';
+            copyIcon.classList.add('copy-icon');
+            copyIcon.setAttribute('aria-hidden', 'true');
+            swatch.appendChild(copyIcon);
+
+            const checkIcon = uiManager.createCheckIcon();
+            checkIcon.style.color = lightness > 50 ? 'black' : 'white';
+            checkIcon.classList.add('check-icon');
+            checkIcon.setAttribute('aria-hidden', 'true');
+            swatch.appendChild(checkIcon);
+
+            // Add hex value display
+            const hexValueContainer = document.createElement('div');
+            hexValueContainer.className = 'hex-value-container';
+            const hexValue = document.createElement('span');
+            hexValue.className = 'hex-value';
+            hexValue.style.color = lightness > 50 ? 'black' : 'white';
+            hexValue.textContent = hexColor;
+            hexValueContainer.appendChild(hexValue);
+            swatch.appendChild(hexValueContainer);
+
+            // Add interactions
+            const handleCopy = () => {
+                navigator.clipboard.writeText(hexColor);
+                copyIcon.style.display = 'none';
+                checkIcon.style.display = 'block';
+                swatch.setAttribute('aria-label', `${this.type} color ${hexColor} copied to clipboard`);
+                setTimeout(() => {
+                    checkIcon.style.display = 'none';
+                    swatch.setAttribute('aria-label', `${this.type} color ${hexColor}. Click to copy`);
+                }, 1500);
+            };
+
+            // Mouse interactions
+            swatch.addEventListener('mouseover', () => {
+                copyIcon.style.display = 'block';
+            });
+            swatch.addEventListener('mouseout', () => {
+                copyIcon.style.display = 'none';
+            });
+            swatch.addEventListener('click', handleCopy);
+
+            // Keyboard interactions
+            swatch.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCopy();
+                }
+            });
+
+            // Focus interactions
+            swatch.addEventListener('focus', () => {
+                copyIcon.style.display = 'block';
+            });
+            swatch.addEventListener('blur', () => {
+                copyIcon.style.display = 'none';
+            });
+
+            container.appendChild(swatch);
+        });
     }
 }
 

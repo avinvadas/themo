@@ -345,3 +345,38 @@ export function preserveChroma(color) {
 export function isValidColor(color) {
     return color && color.coords && color.coords.length === 3 && color.coords.every(coord => !isNaN(coord));
 }
+
+export function normalizeHue(hue) {
+    return (hue % 360 + 360) % 360;
+}
+
+export function createHarmoniousColor(baseHue, primaryColor, secondaryColor) {
+    const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
+    const avgChroma = (primaryColor.lch.c + secondaryColor.lch.c) / 2;
+    const adjustedHue = adjustHueToHarmonize(baseHue, primaryColor.lch.h, secondaryColor.lch.h);
+    return new Color('lch', [avgLightness, avgChroma, adjustedHue]);
+}
+
+// adjust hue for harmony
+export function adjustHueToHarmonize(baseHue, primaryHue, secondaryHue) {
+    const hueDifference = Math.abs(primaryHue - secondaryHue);
+    let adjustedHue = baseHue;
+
+    if (hueDifference < 90) {
+        adjustedHue += (180 - hueDifference) / 2;
+    } else if (hueDifference > 270) {
+        adjustedHue -= (hueDifference - 180) / 2;
+    }
+
+    return normalizeHue(adjustedHue);
+}
+
+// update harmonious colors
+export function updateHarmoniousColors(primaryColor, secondaryColor) {
+    return {
+        error: createHarmoniousColor(0, primaryColor, secondaryColor),
+        warning: createHarmoniousColor(60, primaryColor, secondaryColor),
+        success: createHarmoniousColor(120, primaryColor, secondaryColor),
+        info: createHarmoniousColor(240, primaryColor, secondaryColor)
+    };
+}
