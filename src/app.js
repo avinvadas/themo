@@ -69,10 +69,29 @@ const quaternaryColorObserver = {
     }
 };
 
+// Add this near the top with other observers
+const indicationColorObserver = {
+    update(data) {
+        const { primaryColor, secondaryColor, indicationColors } = data;
+        if (primaryColor && secondaryColor && indicationColors) {
+            // Update indication rows
+            const types = ['alert', 'warning', 'success', 'info'];
+            types.forEach(type => {
+                const container = document.getElementById(`indication-scale-${type}`);
+                if (container && indicationColors[type]) {
+                    const indicationRow = new IndicationRow(indicationColors[type], type);
+                    indicationRow.containerId = `indication-scale-${type}`;
+                    indicationRow.update(primaryColor, secondaryColor);
+                }
+            });
+        }
+    }
+};
 
 colorManager.addObserver(secondaryColorObserver);
 colorManager.addObserver(tertiaryColorObserver);
 colorManager.addObserver(quaternaryColorObserver);
+colorManager.addObserver(indicationColorObserver);
 
 function testQuaternaryColorUpdate() {
     const testColor = new Color('lch', [50, 50, 180]);
@@ -108,13 +127,16 @@ const iconSvgAnaShort = '<svg class="utility-icon" width="100%" height="100%" vi
 
 const iconSvgAnaSplit = '<svg  class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(6.12321e-17,0.999997,-0.999997,6.12321e-17,323.199,0.350154)"><path d="M22.865,288.42C30.504,289.922 36.274,296.662 36.274,304.739C36.274,313.917 28.822,321.37 19.643,321.37C10.464,321.37 3.012,313.917 3.012,304.739C3.012,296.662 8.781,289.922 16.42,288.42C16.308,288.757 16.247,289.117 16.247,289.492C16.247,289.991 16.356,290.466 16.55,290.893C10.206,292.306 5.458,297.972 5.458,304.739C5.458,312.567 11.814,318.923 19.643,318.923C27.471,318.923 33.827,312.567 33.827,304.739C33.827,297.873 28.939,292.141 22.457,290.834C22.589,290.494 22.662,290.125 22.662,289.738C22.662,289.226 22.534,288.743 22.309,288.32Z" style="fill-opacity:0.33;"/></g><g transform="matrix(6.12321e-17,0.999997,-0.999997,6.12321e-17,323.199,0.350154)"><path d="M32.465,294.151C32.517,294.148 32.57,294.147 32.623,294.147C34.294,294.147 35.65,295.503 35.65,297.173C35.65,298.844 34.294,300.2 32.623,300.2C31.842,300.2 31.129,299.904 30.592,299.417L22.62,304.02C22.675,304.247 22.704,304.484 22.704,304.727C22.704,306.398 21.347,307.754 19.677,307.754C18.006,307.754 16.65,306.398 16.65,304.727C16.65,304.51 16.673,304.298 16.716,304.094L8.671,299.45C8.138,299.917 7.44,300.2 6.677,300.2C5.006,300.2 3.65,298.844 3.65,297.173C3.65,295.503 5.006,294.147 6.677,294.147C6.725,294.147 6.774,294.148 6.821,294.15C8.935,291.595 11.796,289.68 15.069,288.745C15.52,286.63 17.401,285.042 19.65,285.042C21.9,285.042 23.782,286.632 24.232,288.75C27.498,289.687 30.355,291.599 32.465,294.151ZM9.056,295.302C9.461,295.817 9.704,296.467 9.704,297.173C9.704,297.537 9.639,297.886 9.522,298.209L17.386,302.749C17.777,302.297 18.299,301.962 18.893,301.803L18.893,294.348C17.18,294.07 15.778,292.861 15.223,291.258C12.821,292.045 10.701,293.458 9.056,295.302ZM24.075,291.262C23.518,292.867 22.11,294.076 20.393,294.351L20.393,301.786C20.99,301.931 21.518,302.253 21.918,302.693L29.762,298.164C29.655,297.854 29.596,297.52 29.596,297.173C29.596,296.471 29.836,295.825 30.237,295.311C28.594,293.466 26.476,292.052 24.075,291.262ZM16.596,289.726C16.596,291.411 17.965,292.779 19.65,292.779C21.335,292.779 22.704,291.411 22.704,289.726C22.704,288.04 21.335,286.672 19.65,286.672C17.965,286.672 16.596,288.04 16.596,289.726Z"/</g></svg>'
 const iconSvgFullCircle = '<svg class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><path d="M20,3.431C29.144,3.431 36.569,10.856 36.569,20C36.569,29.145 29.144,36.569 20,36.569C10.855,36.569 3.431,29.145 3.431,20C3.431,10.856 10.855,3.431 20,3.431ZM20,5.785C12.155,5.785 5.785,12.155 5.785,20C5.785,27.845 12.155,34.215 20,34.215C27.845,34.215 34.215,27.845 34.215,20C34.215,12.155 27.845,5.785 20,5.785ZM20,16.867C21.73,16.867 23.133,18.27 23.133,20C23.133,21.73 21.73,23.133 20,23.133C18.27,23.133 16.867,21.73 16.867,20C16.867,18.27 18.27,16.867 20,16.867Z"/></svg>';
-
+const iconSvgNotification = `<svg class="utility-icon" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M4,19L4,17L6,17L6,10C6,8.617 6.417,7.387 7.25,6.313C8.083,5.238 9.167,4.533 10.5,4.2L10.5,3.5C10.5,3.083 10.646,2.729 10.938,2.438C11.229,2.146 11.583,2 12,2C12.417,2 12.771,2.146 13.063,2.438C13.354,2.729 13.5,3.083 13.5,3.5L13.5,4.2C14.833,4.533 15.917,5.238 16.75,6.313C17.583,7.387 18,8.617 18,10L18,17L20,17L20,19L4,19ZM12,22C11.45,22 10.979,21.804 10.588,21.413C10.196,21.021 10,20.55 10,20L14,20C14,20.55 13.804,21.021 13.413,21.413C13.021,21.804 12.55,22 12,22ZM8,17L16,17L16,10C16,8.9 15.608,7.958 14.825,7.175C14.042,6.392 13.1,6 12,6C10.9,6 9.958,6.392 9.175,7.175C8.392,7.958 8,8.9 8,10L8,17Z" style="fill:currentColor;fill-rule:nonzero;"/>
+</svg>`;
 
 
 let iconShortRange = iconSvgCompShort;
 let iconLongRange = iconSvgCompLong;
 let iconFullRange = iconSvgFullCircle;
 let iconSplitRange = iconSvgCompSplit;
+let iconNotification = iconSvgNotification;
 document.addEventListener('DOMContentLoaded', init);
 
 
@@ -553,17 +575,118 @@ function setupRows() {
     appendIconToRow('Analogous wide', iconLongRange);
     appendIconToRow('Analogous narrow', iconShortRange);
     appendIconToRow('Analogous Full circ.', iconFullRange);
+    appendIconToRow('Utilities', iconNotification);
 
-    // Now add Indication Color Rows
-    const indicationColors = colorManager.getIndicationColors();
-    if (indicationColors) {
-        Object.entries(indicationColors).forEach(([type, color]) => {
+    // Create Utilities section with grid
+    const utilitiesContainer = document.createElement('div');
+    utilitiesContainer.className = 'utilities-container';
+
+    // Create label container with proper structure
+    const labelButtonContainer = document.createElement('div');
+    labelButtonContainer.className = 'label-button-container';
+
+    // Create heading with icon
+    const heading = document.createElement('h4');
+    heading.className = 'palette-label heading-04';
+    
+    // Create icon span and SVG
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'palette-icon';
+    const utilityIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    utilityIcon.classList.add('utility-icon');
+    utilityIcon.setAttribute('width', '100%');
+    utilityIcon.setAttribute('height', '100%');
+    utilityIcon.setAttribute('viewBox', '0 0 40 40');
+    utilityIcon.setAttribute('version', '1.1');
+    utilityIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    utilityIcon.innerHTML = iconNotification;
+    
+    iconSpan.appendChild(utilityIcon);
+    heading.appendChild(iconSpan);
+    heading.appendChild(document.createTextNode('Utilities'));
+
+    // Create copy button
+    const copyButton = document.createElement('button');
+    copyButton.className = 'copy-json-button';
+    copyButton.textContent = 'Copy as JSON';
+
+    // Add click handler for the copy button
+    copyButton.addEventListener('click', () => {
+        const jsonData = {};
+        types.forEach(type => {
+            const color = colorManager.getIndicationColor(type);
             if (color) {
+                // Create an IndicationRow instance to get the scale colors
                 const indicationRow = new IndicationRow(color, type);
-                createAndAddRow(indicationRow, `${type.charAt(0).toUpperCase() + type.slice(1)}`, 'indication-scale');
+                const [darkColor, baseColor, brightColor] = indicationRow.colors;
+
+                jsonData[type] = {
+                    [`${type}-dark`]: darkColor.to('srgb').toString({ format: 'hex' }),
+                    [`${type}-base`]: baseColor.to('srgb').toString({ format: 'hex' }),
+                    [`${type}-bright`]: brightColor.to('srgb').toString({ format: 'hex' })
+                };
             }
         });
-    }
+
+        navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
+
+        // Show feedback using existing pattern
+        const originalText = copyButton.textContent;
+        copyButton.textContent = 'Copied to clipboard!';
+        setTimeout(() => {
+            copyButton.textContent = originalText;
+        }, 1500);
+    });
+
+    // Assemble the label container
+    labelButtonContainer.appendChild(heading);
+    labelButtonContainer.appendChild(copyButton);
+    utilitiesContainer.appendChild(labelButtonContainer);
+
+    // Create grid container for indication rows
+    const indicationRowsGrid = document.createElement('div');
+    indicationRowsGrid.className = 'indication-rows-grid';
+    utilitiesContainer.appendChild(indicationRowsGrid);
+
+    // Add the utilities container to the DOM FIRST
+    palettesSection.appendChild(utilitiesContainer);
+
+    // THEN create indication rows
+    const types = ['alert', 'warning', 'success', 'info'];
+    types.forEach(type => {
+        const color = colorManager.getIndicationColor(type);
+        if (color) {
+            // Create row container
+            const rowContainer = document.createElement('div');
+            rowContainer.className = 'indication-row-container';
+            
+            // Create label
+            const rowLabelContainer = document.createElement('div');
+            rowLabelContainer.className = 'label-button-container';
+            const rowLabel = document.createElement('span');
+            rowLabel.className = 'row-label';
+            rowLabel.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            rowLabelContainer.appendChild(rowLabel);
+            rowContainer.appendChild(rowLabelContainer);
+
+            // Create swatch container
+            const swatchContainer = document.createElement('div');
+            swatchContainer.className = 'color-swatch-container indication-scale';
+            const containerId = `indication-scale-${type}`;
+            swatchContainer.id = containerId;
+            rowContainer.appendChild(swatchContainer);
+
+            // Add to grid
+            indicationRowsGrid.appendChild(rowContainer);
+
+            // Force a reflow to ensure the container is in the DOM
+            void indicationRowsGrid.offsetHeight;
+
+            // Create and populate swatches
+            const indicationRow = new IndicationRow(color, type);
+            indicationRow.createSwatches(containerId);
+        }
+    });
 }
 
 /** Color controls in the UI: */
@@ -994,7 +1117,7 @@ function handleHueChange(event) {
     appendIconToRow("Analogous wide", iconLongRange);
     appendIconToRow("Analogous narrow", iconShortRange);
     appendIconToRow("Analogous full circ.", iconFullRange);
-    appendIconToRow("Split", iconSplitRange);
+    appendIconToRow('Utilities', iconNotification);
 
     // Calculate new secondary color, passing true for hueChangeOnly
     const newSecondaryColor = recalculateSecondaryColor(primaryColor, hueDif, secondaryColor, true);

@@ -443,7 +443,7 @@ input[type="range"]::-moz-range-track {
     margin:0;
     color: var(--font-color);
     display:flex;
-    align-items:center;
+    /*align-items:center;*/
     gap:0.5rem; 
 
 }
@@ -1271,7 +1271,8 @@ input[type="range"]::-moz-slider-thumb{
     position: absolute;
     bottom: 0.5rem;
     width: 100%;
-    text-align: center;
+    text-align: left;
+    padding-left: 1rem;
     font-size: 0.8rem;
     opacity: 1;
 }
@@ -1288,4 +1289,95 @@ input[type="range"]::-moz-slider-thumb{
         font-size: 0.7rem;
         bottom: 0.25rem;
     }
+}
+
+/* Utilities section */
+.utilities-container {
+    margin-top: 2rem;
+    border-top: 1px solid var(--layout-border);
+    padding-top: 1rem;
+}
+
+.utilities-container > .label-button-container {
+    margin-bottom: 1.5rem;
+}
+
+/* Grid layout for indication rows */
+.indication-rows-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    width: 100%;
+}
+
+.indication-row-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.indication-row-container .label-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.indication-row-container .row-label {
+    font-size: var(--font-size-small);
+}
+
+.indication-row-container .color-swatch-container {
+    margin-bottom: 0;
+}
+
+/* Mobile layout */
+@media only screen and (max-width: 768px) {
+    .indication-rows-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .utilities-container > .label-button-container {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Utilities section styling */
+.utilities-container .label-button-container,
+.indication-row-container .label-button-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.utilities-container .row-label,
+.indication-row-container .row-label {
+    font-family: var(--typeface-body);
+    font-size: var(--font-size-small);
+    font-weight: 400;
+    color: var(--font-color);
+}
+
+.utilities-container .copy-json-button,
+.indication-row-container .copy-json-button {
+    color: var(--font-color);
+    font-family: var(--typeface-body);
+    font-size: var(--font-size-small);
+    font-weight: 200;
+    opacity: 0.85;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem;
+    width: auto;
+    margin-left: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--font-color);
+    background: transparent;
 }

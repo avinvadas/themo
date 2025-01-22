@@ -975,51 +975,42 @@ export class IndicationRow extends ScalesRow {
 
         this.type = type;
         this.hueMap = hueMap;
-    }
-
-    update(primaryColor, secondaryColor) {
-        if (!primaryColor || !secondaryColor) return;
-
-        const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
-        const maxChroma = Math.max(primaryColor.lch.c, secondaryColor.lch.c);
-
-        // Update source color while maintaining fixed hue
-        this.sourceColor = new colorUtils.Color('lch', [
-            avgLightness,
-            maxChroma,
-            this.hueMap[this.type]
-        ]);
-
-        // Update start and end points
-        this.config.startPoint = {
-            l: avgLightness - 20,
-            c: maxChroma,
-            h: this.hueMap[this.type]
-        };
-        this.config.endPoint = {
-            l: avgLightness + 20,
-            c: maxChroma,
-            h: this.hueMap[this.type]
-        };
-
+        this.sourceColor = baseColor;
+        
+        // Generate the initial color scale
         this.generateScale();
-        this.updateSwatches();
     }
 
-    createSwatches(containerIdPrefix = 'indication-scale', label = '') {
+    generateScale() {
+        // Generate a scale of 3 colors
+        const { startPoint, endPoint } = this.config;
+        
+        this.colors = [
+            new colorUtils.Color('lch', [startPoint.l, startPoint.c, startPoint.h]),
+            this.sourceColor,
+            new colorUtils.Color('lch', [endPoint.l, endPoint.c, endPoint.h])
+        ];
+    }
+
+    createSwatches(containerId, label = '') {
         if (!this.containerId) {
-            this.containerId = `${containerIdPrefix}-${this.type}-${Math.random().toString(36).substr(2, 9)}`;
+            this.containerId = containerId;
         }
         
-        const container = document.getElementById(this.containerId);
+        // Use ScalesRow's createSwatches
+        super.createSwatches(containerId, label);
+        
+        // Add our specific class to the container
+        const container = document.getElementById(containerId);
         if (container) {
-            container.classList.add('harmony-row-height');
+            container.classList.add('indication-scale');
         }
-        
-        super.createSwatches(this.containerId, label);
     }
 
     updateSwatches() {
+        // Generate new colors before updating swatches
+        this.generateScale();
+        
         const container = document.getElementById(this.containerId);
         if (!container) {
             console.error(`Container not found for ${this.type} indication swatches`);
@@ -1027,17 +1018,18 @@ export class IndicationRow extends ScalesRow {
         }
 
         container.innerHTML = '';
+        container.classList.add('indication-scale');
         
-        this.colors.forEach((color, index) => {
+        // Create swatches without contrast ratios
+        this.colors.forEach((color) => {
             const swatch = document.createElement('button');
             swatch.className = 'color-swatch';
             swatch.type = 'button';
             
-            // Set background color and get hex value
             const hexColor = color.to('srgb').toString({ format: 'hex' });
             swatch.style.backgroundColor = hexColor;
             
-            // Add proper ARIA attributes
+            // Add ARIA attributes
             swatch.setAttribute('aria-label', `${this.type} color ${hexColor}. Click to copy`);
             swatch.setAttribute('role', 'button');
             swatch.setAttribute('tabindex', '0');
@@ -1045,7 +1037,7 @@ export class IndicationRow extends ScalesRow {
             // Calculate lightness for contrast
             const lightness = color.lch.l;
             
-            // Add hover-click interactions with embedded SVGs
+            // Add copy and check icons
             const copyIcon = uiManager.createCopyIcon();
             copyIcon.style.color = lightness > 50 ? 'black' : 'white';
             copyIcon.classList.add('copy-icon');
@@ -1107,6 +1099,35 @@ export class IndicationRow extends ScalesRow {
 
             container.appendChild(swatch);
         });
+    }
+
+    update(primaryColor, secondaryColor) {
+        if (!primaryColor || !secondaryColor) return;
+
+        const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
+        const maxChroma = Math.max(primaryColor.lch.c, secondaryColor.lch.c);
+
+        // Update source color while maintaining fixed hue
+        this.sourceColor = new colorUtils.Color('lch', [
+            avgLightness,
+            maxChroma,
+            this.hueMap[this.type]
+        ]);
+
+        // Update start and end points
+        this.config.startPoint = {
+            l: avgLightness - 20,
+            c: maxChroma,
+            h: this.hueMap[this.type]
+        };
+        this.config.endPoint = {
+            l: avgLightness + 20,
+            c: maxChroma,
+            h: this.hueMap[this.type]
+        };
+
+        this.generateScale();
+        this.updateSwatches();
     }
 }
 
