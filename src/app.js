@@ -125,7 +125,7 @@ const iconSvgAnaLong = '<svg class="utility-icon" width="100%" height="100%" vie
 
 const iconSvgAnaShort = '<svg class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><path d="M34.557,15.689L32.14,16.336C31.17,12.717 28.802,9.631 25.557,7.757C18.804,3.859 10.156,6.176 6.257,12.929C2.359,19.682 4.676,28.33 11.429,32.229C16.967,35.426 23.962,34.505 28.483,29.983L30.253,31.753C24.93,37.076 16.696,38.16 10.178,34.396C2.228,29.806 -0.499,19.627 4.09,11.678C8.68,3.728 18.859,1.001 26.809,5.59C30.628,7.796 33.416,11.428 34.557,15.689Z" style="fill-opacity:0.33;"/><path d="M20.004,22.562C19.549,22.84 19.014,23 18.442,23C16.787,23 15.442,21.656 15.442,20C15.442,18.344 16.787,17 18.442,17C19.838,17 21.012,17.955 21.347,19.247L28.829,19.247C29.186,17.009 31.127,15.296 33.465,15.296C36.055,15.296 38.158,17.399 38.158,19.99C38.158,22.58 36.055,24.684 33.465,24.684C31.13,24.684 29.192,22.976 28.831,20.743L21.349,20.743C21.282,21.007 21.179,21.258 21.047,21.489L27.74,28.182C28.061,28.064 28.409,28 28.771,28C30.427,28 31.771,29.344 31.771,31C31.771,32.656 30.427,34 28.771,34C27.115,34 25.771,32.656 25.771,31C25.771,30.256 26.042,29.574 26.492,29.05L20.004,22.562ZM33.465,16.925C31.773,16.925 30.4,18.298 30.4,19.99C30.4,21.681 31.773,23.054 33.465,23.054C35.156,23.054 36.529,21.681 36.529,19.99C36.529,18.298 35.156,16.925 33.465,16.925Z"/<path d="M30.278,31.727L28.505,29.962C30.255,28.204 31.511,26.017 32.148,23.62L34.567,24.263C33.817,27.084 32.338,29.659 30.278,31.727Z"/></svg>';
 
-const iconSvgAnaSplit = '<svg  class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(6.12321e-17,0.999997,-0.999997,6.12321e-17,323.199,0.350154)"><path d="M22.865,288.42C30.504,289.922 36.274,296.662 36.274,304.739C36.274,313.917 28.822,321.37 19.643,321.37C10.464,321.37 3.012,313.917 3.012,304.739C3.012,296.662 8.781,289.922 16.42,288.42C16.308,288.757 16.247,289.117 16.247,289.492C16.247,289.991 16.356,290.466 16.55,290.893C10.206,292.306 5.458,297.972 5.458,304.739C5.458,312.567 11.814,318.923 19.643,318.923C27.471,318.923 33.827,312.567 33.827,304.739C33.827,297.873 28.939,292.141 22.457,290.834C22.589,290.494 22.662,290.125 22.662,289.738C22.662,289.226 22.534,288.743 22.309,288.32Z" style="fill-opacity:0.33;"/></g><g transform="matrix(6.12321e-17,0.999997,-0.999997,6.12321e-17,323.199,0.350154)"><path d="M32.465,294.151C32.517,294.148 32.57,294.147 32.623,294.147C34.294,294.147 35.65,295.503 35.65,297.173C35.65,298.844 34.294,300.2 32.623,300.2C31.842,300.2 31.129,299.904 30.592,299.417L22.62,304.02C22.675,304.247 22.704,304.484 22.704,304.727C22.704,306.398 21.347,307.754 19.677,307.754C18.006,307.754 16.65,306.398 16.65,304.727C16.65,304.51 16.673,304.298 16.716,304.094L8.671,299.45C8.138,299.917 7.44,300.2 6.677,300.2C5.006,300.2 3.65,298.844 3.65,297.173C3.65,295.503 5.006,294.147 6.677,294.147C6.725,294.147 6.774,294.148 6.821,294.15C8.935,291.595 11.796,289.68 15.069,288.745C15.52,286.63 17.401,285.042 19.65,285.042C21.9,285.042 23.782,286.632 24.232,288.75C27.498,289.687 30.355,291.599 32.465,294.151ZM9.056,295.302C9.461,295.817 9.704,296.467 9.704,297.173C9.704,297.537 9.639,297.886 9.522,298.209L17.386,302.749C17.777,302.297 18.299,301.962 18.893,301.803L18.893,294.348C17.18,294.07 15.778,292.861 15.223,291.258C12.821,292.045 10.701,293.458 9.056,295.302ZM24.075,291.262C23.518,292.867 22.11,294.076 20.393,294.351L20.393,301.786C20.99,301.931 21.518,302.253 21.918,302.693L29.762,298.164C29.655,297.854 29.596,297.52 29.596,297.173C29.596,296.471 29.836,295.825 30.237,295.311C28.594,293.466 26.476,292.052 24.075,291.262ZM16.596,289.726C16.596,291.411 17.965,292.779 19.65,292.779C21.335,292.779 22.704,291.411 22.704,289.726C22.704,288.04 21.335,286.672 19.65,286.672C17.965,286.672 16.596,288.04 16.596,289.726Z"/</g></svg>'
+const iconSvgAnaSplit = '<svg  class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(6.12321e-17,0.999997,-0.999997,6.12321e-17,323.199,0.350154)"><path d="M22.865,288.42C30.504,289.922 36.274,296.662 36.274,304.739C36.274,313.917 28.822,321.37 19.643,321.37C10.464,321.37 3.012,313.917 3.012,304.739C3.012,296.662 8.781,289.922 16.42,288.42C16.308,288.757 16.247,289.117 16.247,289.492C16.247,289.991 16.356,290.466 16.55,290.893C10.206,292.306 5.458,297.873 5.458,304.739C5.458,312.567 11.814,318.923 19.643,318.923C27.471,318.923 33.827,312.567 33.827,304.739C33.827,297.873 28.939,292.141 22.457,290.834C22.589,290.494 22.662,290.125 22.662,289.738C22.662,289.226 22.534,288.743 22.309,288.32Z" style="fill-opacity:0.33;"/></g><g transform="matrix(6.12321e-17,0.999997,-0.999997,6.12321e-17,323.199,0.350154)"><path d="M32.465,294.151C32.517,294.148 32.57,294.147 32.623,294.147C34.294,294.147 35.65,295.503 35.65,297.173C35.65,298.844 34.294,300.2 32.623,300.2C31.842,300.2 31.129,299.904 30.592,299.417L22.62,304.02C22.675,304.247 22.704,304.484 22.704,304.727C22.704,306.398 21.347,307.754 19.677,307.754C18.006,307.754 16.65,306.398 16.65,304.727C16.65,304.51 16.673,304.298 16.716,304.094L8.671,299.45C8.138,299.917 7.44,300.2 6.677,300.2C5.006,300.2 3.65,298.844 3.65,297.173C3.65,295.503 5.006,294.147 6.677,294.147C6.725,294.147 6.774,294.148 6.821,294.15C8.935,291.595 11.796,289.68 15.069,288.745C15.52,286.63 17.401,285.042 19.65,285.042C21.9,285.042 23.782,286.632 24.232,288.75C27.498,289.687 30.355,291.599 32.465,294.151ZM9.056,295.302C9.461,295.817 9.704,296.467 9.704,297.173C9.704,297.537 9.639,297.886 9.522,298.209L17.386,302.749C17.777,302.297 18.299,301.962 18.893,301.803L18.893,294.348C17.18,294.07 15.778,292.861 15.223,291.258C12.821,292.045 10.701,293.458 9.056,295.302ZM24.075,291.262C23.518,292.867 22.11,294.076 20.393,294.351L20.393,301.786C20.99,301.931 21.518,302.253 21.918,302.693L29.762,298.164C29.655,297.854 29.596,297.52 29.596,297.173C29.596,296.471 29.836,295.825 30.237,295.311C28.594,293.466 26.476,292.052 24.075,291.262ZM16.596,289.726C16.596,291.411 17.965,292.779 19.65,292.779C21.335,292.779 22.704,291.411 22.704,289.726C22.704,288.04 21.335,286.672 19.65,286.672C17.965,286.672 16.596,288.04 16.596,289.726Z"/</g></svg>'
 const iconSvgFullCircle = '<svg class="utility-icon" width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill:currentColor;fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><path d="M20,3.431C29.144,3.431 36.569,10.856 36.569,20C36.569,29.145 29.144,36.569 20,36.569C10.855,36.569 3.431,29.145 3.431,20C3.431,10.856 10.855,3.431 20,3.431ZM20,5.785C12.155,5.785 5.785,12.155 5.785,20C5.785,27.845 12.155,34.215 20,34.215C27.845,34.215 34.215,27.845 34.215,20C34.215,12.155 27.845,5.785 20,5.785ZM20,16.867C21.73,16.867 23.133,18.27 23.133,20C23.133,21.73 21.73,23.133 20,23.133C18.27,23.133 16.867,21.73 16.867,20C16.867,18.27 18.27,16.867 20,16.867Z"/></svg>';
 const iconSvgNotification = `<svg class="utility-icon" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
     <path d="M4,19L4,17L6,17L6,10C6,8.617 6.417,7.387 7.25,6.313C8.083,5.238 9.167,4.533 10.5,4.2L10.5,3.5C10.5,3.083 10.646,2.729 10.938,2.438C11.229,2.146 11.583,2 12,2C12.417,2 12.771,2.146 13.063,2.438C13.354,2.729 13.5,3.083 13.5,3.5L13.5,4.2C14.833,4.533 15.917,5.238 16.75,6.313C17.583,7.387 18,8.617 18,10L18,17L20,17L20,19L4,19ZM12,22C11.45,22 10.979,21.804 10.588,21.413C10.196,21.021 10,20.55 10,20L14,20C14,20.55 13.804,21.021 13.413,21.413C13.021,21.804 12.55,22 12,22ZM8,17L16,17L16,10C16,8.9 15.608,7.958 14.825,7.175C14.042,6.392 13.1,6 12,6C10.9,6 9.958,6.392 9.175,7.175C8.392,7.958 8,8.9 8,10L8,17Z" style="fill:currentColor;fill-rule:nonzero;"/>
@@ -533,8 +533,8 @@ function setupRows() {
         steps: 10,
         isNeutral: true,
         neutralChroma: 5,
-    }, 'Neutral Scales');
-    createAndAddRow(neutralScalesRow, 'Neutral Scales', 'scalesrow', true);
+    }, 'Neutrals');
+    createAndAddRow(neutralScalesRow, 'Neutrals', 'scalesrow', true);
 
     // Harmony Rows first
     const harmonyWideCircRow = HarmonicColorRow.create(primaryColor, secondaryColor, {
@@ -711,22 +711,6 @@ function setupColorHandlers() {
 }
 
 function handlePrimaryColorInput(event) {
-    const newColor = event.target.value;
-    updateColor(newColor);
-}
-
-function handleColorPicker(event) {
-    const newColor = event.target.value;
-    updateColor(newColor);
-}
-
-function updateColor(newColor) {
-    const color = new colorUtils.Color(newColor);
-    document.documentElement.style.setProperty('--color-primary', color.to('srgb').toString({ format: 'hex' }));
-    // Update other elements or perform additional actions as needed
-}
-
-function handlePrimaryColorInput(event) {
     let value = event.target.value;
 
     // Step 1: Keep only the first `#` and remove any others
@@ -745,14 +729,21 @@ function handlePrimaryColorInput(event) {
     // Step 4: Only update color if it matches a valid hex format
     if (/^#[0-9A-Fa-f]{3}$|^#[0-9A-Fa-f]{6}$/.test(value)) {
         updateColor(value);
+        updatePrimaryColor(value);
     }
-    updatePrimaryColor(value);
 }
-
 
 function handleColorPicker(event) {
-    updateColor(event.target.value);
+    const newColor = event.target.value;
+    updateColor(newColor);
 }
+/*
+function updateColor(newColor) {
+    const color = new colorUtils.Color(newColor);
+    document.documentElement.style.setProperty('--color-primary', color.to('srgb').toString({ format: 'hex' }));
+    // Update other elements or perform additional actions as needed
+}
+
 /* update primary color value across controls and system values */
 function updateColor(value) {
     const colorInput = document.getElementById('color-input');
@@ -900,29 +891,6 @@ function updateUIElements() {
         console.warn('Warning: Quaternary color chroma is zero');
     }
 }
-
-function updateIndicationColors() {
-    indicationColors = {
-      alert: colorManager.getIndicationColor("alert"),
-      warning: colorManager.getIndicationColor("warning"),
-      success: colorManager.getIndicationColor("success"),
-      info: colorManager.getIndicationColor("info"),
-    }
-  
-    updateColorDisplay("alert-color", indicationColors.alert)
-    updateColorDisplay("warning-color", indicationColors.warning)
-    updateColorDisplay("success-color", indicationColors.success)
-    updateColorDisplay("info-color", indicationColors.info)
-  }
-
-
-  function updateColorDisplay(elementId, color) {
-    const element = document.getElementById(elementId)
-    if (element) {
-      element.style.backgroundColor = color.to("srgb").toString({ format: "hex" })
-      element.textContent = color.to("srgb").toString({ format: "hex" })
-    }
-  }
   
   function createIndicationColorRows() {
     const indicationColors = [
