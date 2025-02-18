@@ -336,12 +336,17 @@ function updateColorProperties() {
 
 function init() {
     initCallCount++;
-    if (initCallCount > 1) {
-       /* console.warn(`Warning: Init function called ${initCallCount} times!`); */
-    }
     
-    /* Initiation calls: */
-    initiateColors(); /* initiating system colors */
+    // Check for URL parameters before any initialization
+    const params = new URLSearchParams(window.location.search);
+    if (params.size > 0) {
+        handleURLParameters();
+    } else {
+        // Only run default initialization if no URL parameters
+        initiateColors(); /* initiating system colors */
+    }
+
+    /* Continue with normal initialization */
     initializeMainColorInput(); /* Main color input field */
     setupSecondaryColorHandlers(); /* secondary color controls*/
     setupHueSelectionControls(); /* hue harmony tabs */
@@ -356,7 +361,7 @@ function init() {
         return;
     }
 
-    // Ensure initial colors are set in ColorManager
+    // Ensure colors are set in ColorManager
     colorManager.setPrimaryColor(primaryColor);
     colorManager.setSecondaryColor(secondaryColor);
 
@@ -366,7 +371,53 @@ function init() {
     /* UI controls */
     setupColorHandlers();
     updateUIElements();
-     
+}
+
+function handleURLParameters() {
+    const params = new URLSearchParams(window.location.search);
+    
+    try {
+        // 1. Set primary color first
+        if (params.has('primaryColor')) {
+            primaryColor = new Color(params.get('primaryColor')).to('lch');
+            colorManager.setPrimaryColor(primaryColor);
+        } else {
+            primaryColor = new Color('lch', [50, 50, 0]);
+            colorManager.setPrimaryColor(primaryColor);
+        }
+
+        // 2. Set hueDif before calculating secondary color
+        if (params.has('hueDif')) {
+            hueDif = parseFloat(params.get('hueDif'));
+            const harmonyValue = getHarmonyFromHueDif(hueDif);
+            const radio = document.querySelector(`input[value="${harmonyValue}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        // 3. Set secondary color parameters
+        if (params.has('chroma') && params.has('lightness')) {
+            lastUserChroma = parseInt(params.get('chroma'));
+            lastUserLightness = parseInt(params.get('lightness'));
+            
+            const newHue = (primaryColor.lch.h + hueDif) % 360;
+            secondaryColor = new Color('lch', [lastUserLightness, lastUserChroma, newHue]);
+            colorManager.setSecondaryColor(secondaryColor);
+        } else {
+            secondaryColor = new Color('lch', [70, 100, (primaryColor.lch.h + hueDif) % 360]);
+            colorManager.setSecondaryColor(secondaryColor);
+        }
+
+        // Update UI after all parameters are set
+        updateUIElements();
+
+    } catch (error) {
+        console.error('Error handling URL parameters:', error);
+        primaryColor = new Color('lch', [50, 50, 0]);
+        secondaryColor = new Color('lch', [70, 100, 180]);
+        colorManager.setPrimaryColor(primaryColor);
+        colorManager.setSecondaryColor(secondaryColor);
+        updateUIElements();
+    }
 }
 
 // New function to update UI elements without setting up rows again
@@ -1515,5 +1566,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 document.addEventListener('DOMContentLoaded', init);
+
+function getHarmonyFromHueDif(hueDif) {
+    switch(hueDif) {
+        case 179.5: return 'complementary';
+        case 120: return 'triad';
+        case 90: return 'quad';
+        case 45: return 'analogous';
+        default: return 'complementary';
+    }
+}
 
 
