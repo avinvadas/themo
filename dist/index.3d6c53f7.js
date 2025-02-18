@@ -8495,7 +8495,22 @@ class BaseColorRow {
         this.contrastMarkers = [];
     }
     getSwatchesAsJson() {
-        return JSON.stringify(this.colors);
+        const colors = this.colors.map((color, index)=>{
+            const hexColor = color.to('srgb').toString({
+                format: 'hex'
+            });
+            return {
+                [`color${index + 1}`]: hexColor
+            };
+        });
+        // Convert array of objects into a single object
+        const result = colors.reduce((acc, curr)=>{
+            return {
+                ...acc,
+                ...curr
+            };
+        }, {});
+        return JSON.stringify(result, null, 2);
     }
     createLabelButtonContainer(label, isNeutral) {
         const labelButtonContainer = document.createElement('div');
@@ -8972,6 +8987,27 @@ class ScalesRow extends BaseColorRow {
         row.createSwatches('indication-scale', `${type.charAt(0).toUpperCase() + type.slice(1)}`);
         return row;
     }
+    getSwatchesAsJson() {
+        // Get prefix from label or use default based on row type
+        let prefix = 'scale';
+        if (this.config.label) prefix = this.config.label.toLowerCase().replace(/\s+/g, '');
+        else if (this.constructor.name === 'ScalesRow') prefix = 'primary';
+        const colors = this.colors.map((color, index)=>{
+            const hexColor = color.to('srgb').toString({
+                format: 'hex'
+            });
+            return {
+                [`${prefix}${(index + 1) * 100}`]: hexColor
+            };
+        });
+        const result = colors.reduce((acc, curr)=>{
+            return {
+                ...acc,
+                ...curr
+            };
+        }, {});
+        return JSON.stringify(result, null, 2);
+    }
 }
 class HarmonicColorRow extends BaseColorRow {
     constructor(primaryColor, secondaryColor, config = {}){
@@ -9101,15 +9137,26 @@ class HarmonicColorRow extends BaseColorRow {
         });
     }
     getSwatchesAsJson() {
-        if (!this.colors || this.colors.length === 0) /* console.error('Cannot generate JSON: Harmony array is empty or undefined'); */ return '{}'; // Return an empty JSON object if the harmony array is not available
-        const swatchData = this.colors.map((color, index)=>{
+        // Get prefix from label, remove spaces and convert to camelCase
+        let prefix = 'harmony';
+        if (this.config.label) prefix = this.config.label.toLowerCase().replace(/\s+(.)/g, (match, char)=>char.toUpperCase()) // convert to camelCase
+        .replace(/\s+/g, ''); // remove remaining spaces
+        const colors = this.colors.map((color, index)=>{
+            const hexColor = color.to('srgb').toString({
+                format: 'hex'
+            });
             return {
-                [`harmony-palette-${index}`]: color.to('srgb').toString({
-                    format: 'hex'
-                })
-            }; // Convert to hex at this stage
+                [`${prefix}${(index + 1) * 100}`]: hexColor
+            };
         });
-        return JSON.stringify(swatchData, null, 2);
+        // Convert array of objects into a single object
+        const result = colors.reduce((acc, curr)=>{
+            return {
+                ...acc,
+                ...curr
+            };
+        }, {});
+        return JSON.stringify(result, null, 2);
     }
     static create(primaryColor, secondaryColor, config = {}, label = 'Harmonic Color Row') {
         const row = new HarmonicColorRow(primaryColor, secondaryColor, config);
