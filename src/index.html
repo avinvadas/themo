@@ -46,6 +46,7 @@
         <div class="toggle-comp">
           <label class="switch" for="theme-checkbox">
             <input type="checkbox" id="theme-checkbox" 
+                   title="Toggle dark/light theme"
                    class="toggle-checkbox"
                    role="switch"
                    aria-labelledby="theme-switch-label"
@@ -102,7 +103,8 @@
       
         <label class="body-text-small">Set secondary hue:</label>
         <div class="seg-ctrl">
-       <input type="radio" id="complementary" name="colorScheme"  value="complementary" checked >
+       <input type="radio" id="complementary" name="colorScheme" value="complementary" checked
+            aria-label="Make hue complementary">
         <label for="complementary"  tabindex="0"  title="Make hue complementary" >
           <div class='seg-ctrl-tab'>
           <svg  viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
@@ -118,7 +120,8 @@
           </div>
         </label>
         
-        <input type="radio" id="triad" name="colorScheme" value='triad'>
+        <input type="radio" id="triad" name="colorScheme" value='triad'
+            aria-label="Make hue triad">
         <label for="triad"  tabindex="0"  title="Make hue triad">
           <div class='seg-ctrl-tab'>
           <svg viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
@@ -138,7 +141,8 @@
       </svg>
         </div></label>
           
-        <input type="radio" id="quad" name="colorScheme" value='quad' >
+        <input type="radio" id="quad" name="colorScheme" value='quad' 
+            aria-label="Make hue quad">
         <label for="quad"  tabindex="0" title="Make hue quad">
          <div class='seg-ctrl-tab'> 
         <svg viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"> 
@@ -159,7 +163,8 @@
           </div>
         </label>
       
-        <input type="radio" id="analogous" name="colorScheme" value="analogous">
+        <input type="radio" id="analogous" name="colorScheme" value="analogous"
+            aria-label="Make hue analogous">
         <label for="analogous"  tabindex="0" title="Make hue analogous"><div class='seg-ctrl-tab'>
           <svg fill="currentColor" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
           <g transform="matrix(1,0,0,1,-345.47,-283)">
@@ -202,8 +207,11 @@
               </g>
           </g>
       </svg></div></label>
-              <input class="slider-input" type="range" id="chroma-slider" min="0" max="132" value="100" />
-              <input class="number-input" type="number" id="chroma-input" min="0" max="132" value="100">
+              <input class="slider-input" type="range" id="chroma-slider" min="0" max="132" value="100"
+                  aria-label="Adjust chroma">
+              <input class="number-input" type="number" id="chroma-input" min="0" max="132" value="100"
+                  aria-label="Chroma value"
+                  title="Enter chroma value">
           </div>
           <!-- Secondary Lightness adjust -->
           <div class='color-adjust-input' title="adjust lightness of secondary color" id="input_sec_l">
@@ -221,8 +229,11 @@
       </svg>
       </div>
               </label>
-              <input class="slider-input" type="range" id="lightness-slider" min="0" max="100" value="50" />
-              <input class="number-input" type="number" id="lightness-input" min="0" max="100" step="1"> 
+              <input class="slider-input" type="range" id="lightness-slider" min="0" max="100" value="50"
+                  aria-label="Adjust lightness">
+              <input class="number-input" type="number" id="lightness-input" min="0" max="100" step="1"
+                  aria-label="Lightness value"
+                  title="Enter lightness value"> 
             </div>
           </div>
           <button class="copy-json-button" id="generate-shareable-url-button" >Copy theme URL</button>
@@ -242,12 +253,12 @@
       
     <h5 class="heading-05">
       🙏 Special thanks:</h5>
-  <p class="body-text-small">All color calculations are supported by <a href="https://colorjs.io/" target="_blank">Color.js</a> library.<br/> My special thanks to <a href="https://lea.verou.me/" target="_blank">Lea Verou</a> and <a href="https://svgees.us/", target="_blank">Chris Lilley</a> who created it, as well as <a href="https://natebaldw.in/">Nate Baldwin</a> whose in-depth writings helped me find my path through this project. As I was strongly basing on their work, any mistake or miscalculation are solely my own.</p>
+  <p class="body-text-small">All color calculations are supported by <a href="https://colorjs.io/" target="_blank" rel="noopener">Color.js</a> library.<br/> My special thanks to <a href="https://lea.verou.me/" target="_blank" rel="noopener">Lea Verou</a> and <a href="https://svgees.us/" target="_blank" rel="noopener">Chris Lilley</a> who created it, as well as <a href="https://natebaldw.in/" rel="noopener">Nate Baldwin</a> whose in-depth writings helped me find my path through this project. As I was strongly basing on their work, any mistake or miscalculation are solely my own.</p>
 </section>
   <!-- Footer -->
     <footer class='footer'><p class="body-text-small">
       Created by
-      <a href='https://bio.site/avinvadas'  tabindex="0" target='_blank'>Avin Vadas</a>  |  Themo is open-source, <a href='https://github.com/avinvadas/themo'   tabindex="0" target='_blank'>Check it out on Github</a>.</p>
+      <a href='https://bio.site/avinvadas'  tabindex="0" target='_blank' rel="noopener">Avin Vadas</a>  |  Themo is open-source, <a href='https://github.com/avinvadas/themo'   tabindex="0" target='_blank' rel="noopener">Check it out on Github</a>.</p>
     </footer>
   
     <script type="module" src="./app.js"></script>
