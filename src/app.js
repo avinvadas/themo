@@ -1,6 +1,8 @@
-/* This is the main Javascript file, called into the DOM.
-It builds the UI, and coordinates the functionalities with the color calculations.
-*/
+/**
+ * Main application file for color theme management and UI interactions
+ * Handles color calculations, UI updates, and user interactions
+ * Dependencies: colorUtils.js, colorManager.js, uiManager.js
+ */
 
 import ColorManager from './js/colorManager.js';
 import * as colorUtils from './js/colorUtils.js';
@@ -8,13 +10,19 @@ import { ScalesRow, HarmonicColorRow, GeneralColorRow, IndicationRow } from './j
 import { uiManager } from './js/uiManager.js';
 import { copyTimeouts } from './js/uiManager.js';
 
-// Basic parameters
+/**
+ * State Management
+ * Global variables for managing application state
+ */
+
+// Color state
 let primaryColor;
 let secondaryColor;
 let tertiaryColor;
 let quaternaryColor;
 let indicationColors = {}
 
+// UI state
 let rows = [];
 let neutralColor;
 let swatchCounter = 0;
@@ -24,9 +32,9 @@ let lightest = 95;
 let darkest = 2;
 let isSecondaryInputFocused = false;
 
-/* Saving last values */
-let lastUserChroma = 100; 
-let lastUserLightness = 70; 
+// User interaction state
+let lastUserChroma = 100;
+let lastUserLightness = 70;
 let lastPrimaryChroma = 0;
 let lastPrimaryLightness = 0;
 let initCallCount = 0;
@@ -34,7 +42,10 @@ let initCallCount = 0;
 const { Color } = colorUtils;
 const colorManager = new ColorManager();
 
-/* Set color observers */
+/**
+ * Observer Pattern Implementation
+ * Handles updates to color states and UI synchronization
+ */
 
 const secondaryColorObserver = {
     update(data) {

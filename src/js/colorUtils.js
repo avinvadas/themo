@@ -1,11 +1,18 @@
-/* 
-Color operation functions for use across the app
+/**
+ * Color Utilities Module
+ * Core color operations and transformations for the application
+ * Provides color space conversions, interpolation, and validation
  */
 
 import Color from 'colorjs.io';
 
 // Export Color for use in other modules
 export { Color };
+
+/**
+ * Basic Color Transformations
+ * Core color conversion and basic manipulation functions
+ */
 
 // Convert LCH to Hex
 export function lchToHex(l, c, h) {
@@ -25,6 +32,11 @@ export function setValue(value, factor) {
     return Math.max(0, Math.min(value * factor, value < 100 ? 100 : 132));
 }
 
+/**
+ * Color Relationship Functions
+ * Handles color relationships and harmony calculations
+ */
+
 // Set one color relative to a source color (LCH format)
 export function relateColor(srcColor, l, c, h) {
     try {
@@ -34,6 +46,32 @@ export function relateColor(srcColor, l, c, h) {
         return srcColor; // Return the source color if conversion fails
     }
 }
+
+export function createHarmoniousColor(baseHue, primaryColor, secondaryColor) {
+    const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
+    const avgChroma = (primaryColor.lch.c + secondaryColor.lch.c) / 2;
+    const adjustedHue = adjustHueToHarmonize(baseHue, primaryColor.lch.h, secondaryColor.lch.h);
+    return new Color('lch', [avgLightness, avgChroma, adjustedHue]);
+}
+
+// adjust hue for harmony
+export function adjustHueToHarmonize(baseHue, primaryHue, secondaryHue) {
+    const hueDifference = Math.abs(primaryHue - secondaryHue);
+    let adjustedHue = baseHue;
+
+    if (hueDifference < 90) {
+        adjustedHue += (180 - hueDifference) / 2;
+    } else if (hueDifference > 270) {
+        adjustedHue -= (hueDifference - 180) / 2;
+    }
+
+    return normalizeHue(adjustedHue);
+}
+
+/**
+ * Scale Generation
+ * Functions for generating color scales and palettes
+ */
 
 // Generate color scale set (for color palettes)
 export function generateColorScale(sourceColor, config) {
@@ -78,105 +116,19 @@ export function generateColorScale(sourceColor, config) {
     return scaleArray;
 }
 
-// Convert RGB to hex
-export function rgbToHex(rgb) {
-    const [r, g, b] = rgb.substring(4, rgb.length-1).split(',').map(x => parseInt(x));
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+// Generate random LCH color
+export function generateRandomLCH() {
+    return new Color('lch', [
+        50,  // L: 0-100
+        80,  // C: 0-132 (approximate max for sRGB)
+        Math.random() * 360   // H: 0-360
+    ]);
 }
 
-// Calculate source index
-export function calculateSourceIndex(sourceL, startL, endL, steps) {
-    const normalizedPosition = (sourceL - startL) / (endL - startL);
-    return Math.round(normalizedPosition * (steps - 1));
-}
-
-// Calculate interpolation points
-export function calculateInterpolationPoints(currentStep, sourceIndex, totalSteps, startPoint, endPoint, sourceLch) {
-    if (currentStep < sourceIndex) {
-        return {
-            startLch: startPoint,
-            endLch: sourceLch,
-            t: currentStep / sourceIndex
-        };
-    } else {
-        return {
-            startLch: sourceLch,
-            endLch: endPoint,
-            t: (currentStep - sourceIndex) / (totalSteps - 1 - sourceIndex)
-        };
-    }
-}
-
-// Interpolate color
-export function interpolateColor(start, end, t, method) {
-    const interpolate = (a, b) => a + (b - a) * t;
-    let l, c, h;
-
-    switch (method) {
-        case 'linear':
-            l = interpolate(start.l, end.l);
-            c = interpolate(start.c, end.c);
-            h = interpolateHue(start.h, end.h, t);
-            break;
-        case 'quadratic':
-            l = interpolate(start.l, end.l, t * t);
-            c = interpolate(start.c, end.c, t * t);
-            h = interpolateHue(start.h, end.h, t * t);
-            break;
-        default:
-            throw new Error(`Unsupported interpolation method: ${method}`);
-    }
-
-    return new Color("lch", [l, c, h]);
-}
-
-// Interpolate hue values
-export function interpolateHue(start, end, t, method = 'linear') {
-    let diff = end - start;
-    if (Math.abs(diff) > 179.5) {
-        diff = diff > 0 ? diff - 360 : diff + 360;
-    }
-    let h = interpolate(start, start + diff, t, method) % 360;
-    h = h < 0 ? h + 360 : h;
-    return h;
-}
-
-export function interpolateHueLonger(start, end, t, method = 'linear') {
-    let diff = end - start;
-    if (Math.abs(diff) < 179.5) {
-        diff = diff > 0 ? diff - 360 : diff + 360;
-    }
-    let h = interpolate(start, start + diff, t, method) % 360;
-    h = h < 0 ? h + 360 : h;
-    return h;
-}
-
-// General interpolation methods
-export function elastic(t, amplitude = 1, period = 0.3) {
-    const s = period / (2 * Math.PI) * Math.asin(1 / amplitude);
-    return amplitude * Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / period) + 1;
-}
-
-export function elasticIn(t, amplitude = 1, period = 0.3) {
-    if (t === 0) return 0;
-    if (t === 1) return 1;
-    const s = period / (2 * Math.PI) * Math.asin(1 / amplitude);
-    return -(amplitude * Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1 - s) * (2 * Math.PI) / period));
-}
-
-export function elasticOut(t, amplitude = 1, period = 0.3) {
-    if (t === 0) return 0;
-    if (t === 1) return 1;
-    return elastic(t, amplitude, period);
-}
-
-export function sineWave(t) {
-    return (Math.sin(2 * Math.PI * t - Math.PI / 2) + 1) / 2;
-}
-
-export function cosineWave(t) {
-    return (Math.cos(2 * Math.PI * t) + 1) / 2;
-}
+/**
+ * Interpolation Functions
+ * Various methods for color interpolation
+ */
 
 // Interpolate functions by methods:
 export function interpolate(start, end, t, method = 'linear', options = {}) {
@@ -227,64 +179,62 @@ export function interpolate(start, end, t, method = 'linear', options = {}) {
 
     return isReverse ? end + (start - end) * (1 - t) : result;
 }
-// Check text-bg contrast
-export function getContrastTextColor(backgroundColor) {
 
-    try {
-        const testColor = new Color('#ffffff');
-        
-    } catch (error) {
-        console.error('Error creating Color instance:', error);
+export function interpolateHue(start, end, t, method = 'linear') {
+    let diff = end - start;
+    if (Math.abs(diff) > 179.5) {
+        diff = diff > 0 ? diff - 360 : diff + 360;
     }
+    let h = interpolate(start, start + diff, t, method) % 360;
+    h = h < 0 ? h + 360 : h;
+    return h;
+}
 
-    
-    if (!backgroundColor || typeof backgroundColor !== 'string') {
-        console.error('getContrastTextColor: Invalid backgroundColor input', backgroundColor);
-        return '#000000'; // Fallback
+export function interpolateHueLonger(start, end, t, method = 'linear') {
+    let diff = end - start;
+    if (Math.abs(diff) < 179.5) {
+        diff = diff > 0 ? diff - 360 : diff + 360;
     }
-
-    try {
-        const color = new Color(backgroundColor); // Ensure `Color` is operational
-        const luminance = color.luminance;
-        return luminance > 0.179 ? '#000000' : '#ffffff';
-    } catch (error) {
-        console.error('getContrastTextColor: Error creating color object', error);
-        return '#000000'; // Fallback
-    }
+    let h = interpolate(start, start + diff, t, method) % 360;
+    h = h < 0 ? h + 360 : h;
+    return h;
 }
 
+/**
+ * Easing Functions
+ * Mathematical functions for smooth color transitions
+ */
 
-// Calculate chroma based on hue difference
-export function calculateChroma(primaryChroma, hueDifference) {
-    const factor = 1 - (hueDifference / 360);
-    return primaryChroma * factor;
+export function elastic(t, amplitude = 1, period = 0.3) {
+    const s = period / (2 * Math.PI) * Math.asin(1 / amplitude);
+    return amplitude * Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / period) + 1;
 }
 
-// Update contrast status
-export function updateContrastStatus(color1Hex, color2Hex) {
-
-    const color1 = new Color(color1Hex);
-    const color2 = new Color(color2Hex);
-
-    const contrastRatio = color1.contrast(color2, "WCAG21");
-
-    return {
-        ratio: contrastRatio.toFixed(2),
-        aa: contrastRatio >= 4.5,
-        aaa: contrastRatio >= 7,
-        aaLarge: contrastRatio >= 3,
-    };
+export function elasticIn(t, amplitude = 1, period = 0.3) {
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    const s = period / (2 * Math.PI) * Math.asin(1 / amplitude);
+    return -(amplitude * Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1 - s) * (2 * Math.PI) / period));
 }
 
-
-// Generate random LCH color
-export function generateRandomLCH() {
-    return new Color('lch', [
-        50,  // L: 0-100
-        80,  // C: 0-132 (approximate max for sRGB)
-        Math.random() * 360   // H: 0-360
-    ]);
+export function elasticOut(t, amplitude = 1, period = 0.3) {
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    return elastic(t, amplitude, period);
 }
+
+export function sineWave(t) {
+    return (Math.sin(2 * Math.PI * t - Math.PI / 2) + 1) / 2;
+}
+
+export function cosineWave(t) {
+    return (Math.cos(2 * Math.PI * t) + 1) / 2;
+}
+
+/**
+ * Gamut Mapping
+ * Functions for handling color gamut constraints
+ */
 
 export function mapToGamut(color) {
     const srgb = color.to('srgb');
@@ -337,9 +287,55 @@ export function preserveChroma(color) {
     }
 
     return mapped;
-
-
 }
+
+/**
+ * Contrast and Accessibility
+ * Functions for checking color contrast and accessibility
+ */
+
+// Check text-bg contrast
+export function getContrastTextColor(backgroundColor) {
+    if (!backgroundColor || typeof backgroundColor !== 'string') {
+        console.error('getContrastTextColor: Invalid backgroundColor input', backgroundColor);
+        return '#000000'; // Fallback
+    }
+
+    try {
+        const color = new Color(backgroundColor); // Ensure `Color` is operational
+        const luminance = color.luminance;
+        return luminance > 0.179 ? '#000000' : '#ffffff';
+    } catch (error) {
+        console.error('getContrastTextColor: Error creating color object', error);
+        return '#000000'; // Fallback
+    }
+}
+
+// Calculate chroma based on hue difference
+export function calculateChroma(primaryChroma, hueDifference) {
+    const factor = 1 - (hueDifference / 360);
+    return primaryChroma * factor;
+}
+
+// Update contrast status
+export function updateContrastStatus(color1Hex, color2Hex) {
+    const color1 = new Color(color1Hex);
+    const color2 = new Color(color2Hex);
+
+    const contrastRatio = color1.contrast(color2, "WCAG21");
+
+    return {
+        ratio: contrastRatio.toFixed(2),
+        aa: contrastRatio >= 4.5,
+        aaa: contrastRatio >= 7,
+        aaLarge: contrastRatio >= 3,
+    };
+}
+
+/**
+ * Utility Functions
+ * Helper functions for color validation and normalization
+ */
 
 // Custom validation function for Color objects
 export function isValidColor(color) {
@@ -350,25 +346,56 @@ export function normalizeHue(hue) {
     return (hue % 360 + 360) % 360;
 }
 
-export function createHarmoniousColor(baseHue, primaryColor, secondaryColor) {
-    const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
-    const avgChroma = (primaryColor.lch.c + secondaryColor.lch.c) / 2;
-    const adjustedHue = adjustHueToHarmonize(baseHue, primaryColor.lch.h, secondaryColor.lch.h);
-    return new Color('lch', [avgLightness, avgChroma, adjustedHue]);
+// Calculate source index
+export function calculateSourceIndex(sourceL, startL, endL, steps) {
+    const normalizedPosition = (sourceL - startL) / (endL - startL);
+    return Math.round(normalizedPosition * (steps - 1));
 }
 
-// adjust hue for harmony
-export function adjustHueToHarmonize(baseHue, primaryHue, secondaryHue) {
-    const hueDifference = Math.abs(primaryHue - secondaryHue);
-    let adjustedHue = baseHue;
+// Calculate interpolation points
+export function calculateInterpolationPoints(currentStep, sourceIndex, totalSteps, startPoint, endPoint, sourceLch) {
+    if (currentStep < sourceIndex) {
+        return {
+            startLch: startPoint,
+            endLch: sourceLch,
+            t: currentStep / sourceIndex
+        };
+    } else {
+        return {
+            startLch: sourceLch,
+            endLch: endPoint,
+            t: (currentStep - sourceIndex) / (totalSteps - 1 - sourceIndex)
+        };
+    }
+}
 
-    if (hueDifference < 90) {
-        adjustedHue += (180 - hueDifference) / 2;
-    } else if (hueDifference > 270) {
-        adjustedHue -= (hueDifference - 180) / 2;
+// Interpolate color
+export function interpolateColor(start, end, t, method) {
+    const interpolate = (a, b) => a + (b - a) * t;
+    let l, c, h;
+
+    switch (method) {
+        case 'linear':
+            l = interpolate(start.l, end.l);
+            c = interpolate(start.c, end.c);
+            h = interpolateHue(start.h, end.h, t);
+            break;
+        case 'quadratic':
+            l = interpolate(start.l, end.l, t * t);
+            c = interpolate(start.c, end.c, t * t);
+            h = interpolateHue(start.h, end.h, t * t);
+            break;
+        default:
+            throw new Error(`Unsupported interpolation method: ${method}`);
     }
 
-    return normalizeHue(adjustedHue);
+    return new Color("lch", [l, c, h]);
+}
+
+// Convert RGB to hex
+export function rgbToHex(rgb) {
+    const [r, g, b] = rgb.substring(4, rgb.length-1).split(',').map(x => parseInt(x));
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
 // update harmonious colors

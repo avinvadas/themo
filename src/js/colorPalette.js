@@ -1,13 +1,18 @@
-/* 
-Calculation of scales and harmony palettes,
- based on selected primary and secondary colors 
+/**
+ * Color Palette Generation Module
+ * Handles creation and management of color scales and harmonies
+ * Provides base functionality for different types of color rows
  */
- import * as colorUtils from './colorUtils.js';
+import * as colorUtils from './colorUtils.js';
 import { createColorSwatches } from './uiManager.js';
-import * as uiManager  from './uiManager.js';
+import * as uiManager from './uiManager.js';
 import * as colorManager from './colorManager.js';
 
-
+/**
+ * Base Color Row Class
+ * Provides core functionality for color row management
+ * Handles swatch creation, updates, and user interactions
+ */
 class BaseColorRow {
     constructor(config) {
         this.config = {
@@ -25,6 +30,10 @@ class BaseColorRow {
         this.contrastMarkers = [];
     }
 
+    /**
+     * JSON Generation Methods
+     * Handles color data serialization and export
+     */
     getSwatchesAsJson() {
         const colors = this.colors.map((color, index) => {
             const hexColor = color.to('srgb').toString({ format: 'hex' });
@@ -41,6 +50,10 @@ class BaseColorRow {
         return JSON.stringify(result, null, 2);
     }
 
+    /**
+     * UI Component Creation
+     * Handles creation of UI elements and containers
+     */
     createLabelButtonContainer(label, isNeutral) {
         const labelButtonContainer = document.createElement('div');
         labelButtonContainer.className = 'label-button-container';
@@ -72,6 +85,10 @@ class BaseColorRow {
         return labelButtonContainer;
     }
 
+    /**
+     * Color Generation and Updates
+     * Handles color calculations and updates
+     */
     update(sourceColor) {
         if (!sourceColor || !sourceColor.lch) {
             /*console.error('Invalid sourceColor in BaseColorRow.update:', sourceColor);*/
@@ -88,6 +105,10 @@ class BaseColorRow {
         }
     }
 
+    /**
+     * Swatch Management
+     * Handles creation and updates of color swatches
+     */
     createSwatches(containerIdPrefix = 'color-scale', label = '', isNeutral = false) {
         if (!this.containerId) {
             this.containerId = `${containerIdPrefix}-${Math.random().toString(36).substr(2, 9)}`;
@@ -314,6 +335,11 @@ class BaseColorRow {
     }
     
 }
+
+/**
+ * Scales Row Class
+ * Handles creation of color scales with consistent steps
+ */
 export class ScalesRow extends BaseColorRow {
     constructor(sourceColor, config = {}) {
         super({
@@ -613,6 +639,10 @@ export class ScalesRow extends BaseColorRow {
     }
 }
 
+/**
+ * Harmonic Color Row Class
+ * Manages color harmonies and relationships
+ */
 export class HarmonicColorRow extends BaseColorRow {
     constructor(primaryColor, secondaryColor, config = {}) {
         super({
@@ -806,6 +836,10 @@ export class HarmonicColorRow extends BaseColorRow {
     }
 }
 
+/**
+ * General Color Row Class
+ * Handles flexible color row generation with multiple key colors
+ */
 export class GeneralColorRow extends BaseColorRow {
     constructor(config = {}) {
         super({
@@ -986,6 +1020,10 @@ export class GeneralColorRow extends BaseColorRow {
     }
 }
 
+/**
+ * Indication Row Class
+ * Manages semantic color scales for UI states (alert, warning, etc.)
+ */
 export class IndicationRow extends ScalesRow {
     constructor(color, type) {
         // Define fixed hues for each type

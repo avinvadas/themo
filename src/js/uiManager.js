@@ -1,7 +1,8 @@
-/*
-UI Functionalities and dynamic DOM creation (color palettes)
-*/
-
+/**
+ * UI Manager Module
+ * Handles UI interactions, DOM manipulation, and color palette visualization
+ * Manages copy-to-clipboard functionality and dynamic swatch creation
+ */
 
 import * as colorUtils from './colorUtils.js';
 
@@ -13,6 +14,11 @@ export const uiManager = {
     addColorTickerFunctionality,
     copyToClipboard
 };
+
+/**
+ * DOM Utilities
+ * Helper functions for DOM manipulation and element selection
+ */
 function safeQuerySelector(selector) {
     const element = document.querySelector(selector);
     if (!element) {
@@ -22,7 +28,10 @@ function safeQuerySelector(selector) {
     return element;
 }
 
-/* Creating color swatches in the palettes */
+/**
+ * Swatch Creation and Management
+ * Functions for creating and managing color swatches in the UI
+ */
 export function createColorSwatches(colorScale, containerId, contrastRatios, contrastMarkers) {
     const container = document.getElementById(containerId);
 
@@ -139,10 +148,10 @@ export function createColorSwatches(colorScale, containerId, contrastRatios, con
     }, 100);
 }
 
-
-/* Copy-to-clipboard functionality to swatches: */
-
-/* copy icon (on swatch hover/focus) */
+/**
+ * Icon Creation Functions
+ * SVG icon creation for copy and success indicators
+ */
 export function createCopyIcon() {
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     icon.setAttribute("width", "2rem");
@@ -155,7 +164,7 @@ export function createCopyIcon() {
     `;
     return icon;
 }
-/* Check icon (on copy success) */
+
 export function createCheckIcon() {
     const checkIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     checkIcon.setAttribute("width", "2rem");
@@ -172,6 +181,10 @@ export function createCheckIcon() {
     return checkIcon;
 }
 
+/**
+ * Interaction Handlers
+ * Functions managing user interactions with color swatches
+ */
 function addSwatchInteractivity(swatch, hexColor) {
     const hexValue = swatch.querySelector('.hex-value');
     const copyColorFeedback = () => {
@@ -191,7 +204,7 @@ function addSwatchInteractivity(swatch, hexColor) {
         }
     });
 }
-/* Show 'copied!' instead of the hex value */
+
 function showCopiedMessage(swatch) {
     const copiedMsg = document.createElement('div');
     copiedMsg.textContent = 'Copied!';
@@ -200,6 +213,10 @@ function showCopiedMessage(swatch) {
     setTimeout(() => copiedMsg.remove(), 1500);
 }
 
+/**
+ * Color Application Functions
+ * Handles applying colors to CSS and UI elements
+ */
 function applyColorPaletteToCSS(harmonicRow) {
     const cssVariables = harmonicRow.toCssVariables();
     Object.entries(cssVariables).forEach(([variable, value]) => {
@@ -263,10 +280,12 @@ export function addColorTickerFunctionality(elementId) {
     });
 }
 
-/* Create copyTimeouts object. Used in index.js */
+/**
+ * Clipboard Operations
+ * Functions handling copy-to-clipboard functionality
+ */
 export const copyTimeouts = {};
 
-/* Copy to clipboard function */
 function copyColor(hexColor, hexValueElement, copyIcon) {
     navigator.clipboard.writeText(hexColor).then(() => {
         const originalContent = hexValueElement.textContent;

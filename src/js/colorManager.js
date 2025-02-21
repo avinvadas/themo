@@ -1,7 +1,16 @@
 import ObserverManager from "./observerManager.js"
 import { Color, isValidColor } from "./colorUtils.js"
 
+/**
+ * ColorManager Class
+ * Manages color state and relationships between primary, secondary, tertiary, and quaternary colors
+ * Implements Observer pattern for UI synchronization
+ */
+
 export default class ColorManager {
+  /**
+   * State Initialization
+   */
   constructor() {
     this.primaryColor = null
     this.secondaryColor = null
@@ -16,6 +25,10 @@ export default class ColorManager {
     }
   }
 
+  /**
+   * Primary Color Management
+   * Handles primary color updates and triggers related color calculations
+   */
   setPrimaryColor(color, segCtrl) {
     if (color && color instanceof Color) {
       this.primaryColor = color
@@ -26,6 +39,10 @@ export default class ColorManager {
     }
   }
 
+  /**
+   * Secondary Color Management
+   * Handles secondary color updates and dependent color calculations
+   */
   setSecondaryColor(color) {
     if (color && color instanceof Color) {
       this.secondaryColor = color
@@ -36,6 +53,10 @@ export default class ColorManager {
     }
   }
 
+  /**
+   * Color Relationship Management
+   * Handles tertiary and quaternary color calculations
+   */
   updateTertiaryColor(segCtrl) {
     // Existing code unchanged
   }
@@ -44,6 +65,10 @@ export default class ColorManager {
     // Existing code unchanged
   }
 
+  /**
+   * Indication Colors Management
+   * Handles utility color calculations based on primary and secondary colors
+   */
   updateIndicationColors() {
     if (!this.primaryColor || !this.secondaryColor) return;
 
@@ -86,6 +111,10 @@ export default class ColorManager {
     return this.indicationColors
   }
 
+  /**
+   * Observer Pattern Implementation
+   * Handles notifications and observer management
+   */
   notify() {
     this.observerManager.notifyObservers({
       primaryColor: this.primaryColor,
@@ -104,6 +133,10 @@ export default class ColorManager {
     this.observerManager.removeObserver(observer)
   }
 
+  /**
+   * Utility Functions
+   * Helper methods for color updates and calculations
+   */
   updateColors(primaryColor, secondaryColor) {
     // ... existing color updates ...
 
