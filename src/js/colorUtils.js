@@ -133,8 +133,8 @@ export function generateRandomLCH() {
 // Interpolate functions by methods:
 export function interpolate(start, end, t, method = 'linear', options = {}) {
     const { amplitude = 1, period = 0.3 } = options;
-    const isReverse = method.startsWith('reverse');
-    const baseMethod = isReverse ? method.slice(7) : method;
+    const isReverse = method.startsWith('reverse-');
+    const baseMethod = isReverse ? method.slice(8) : method;
     
     if (isReverse) {
         t = 1 - t;

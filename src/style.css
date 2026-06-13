@@ -257,15 +257,11 @@ outline-offset: -1rem ;
 }
 
 
-.wrapper-color-picker{
-  margin:0;
-  padding:0;
-  display:flex;
-  flex-direction:row;
-  gap:0.5rem;
-  justify-content:center;
-  align-items:center;
-  height:100%; 
+.wrapper-color-picker {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .color-thumb{
@@ -276,54 +272,344 @@ outline-offset: -1rem ;
   padding-bottom:0.25rem;
 }
 
- /* Harmony selection ctrl */
- #ctrl-hues{
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:space-between;
-}
+/* ── Secondary color controls ───────────────────────────── */
 
-.wrapper-seg-ctrl{
-  margin:0;
-  padding:0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:1rem;
-  width: 37%;
-}
-
-.seg-ctrl{
-  display:inline-flex;
-  gap:0.5rem;
-  flex-direction:row;
-  align-items:flex-start;
-}
-
-.seg-ctrl-tab{
+/* Row 1: label left | [toggle + copy buttons] right */
+.section-topbar {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.2rem;
-  width:1.5rem;
-  color:var(--font-color);
-  cursor:pointer;
-  padding-bottom:0.25rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
 }
 
-.seg-ctrl-tab svg {
-  width: 1.5rem;
-  height: 1.5rem;
+.section-topbar-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
-.seg-ctrl-label {
-  font-size: 0.55rem;
+/* Tertiary toggle: text label + switch side by side */
+.tertiary-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: var(--font-size-small);
   opacity: 0.7;
-  letter-spacing: 0.01em;
-  line-height: 1;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+
+.tertiary-toggle-wrap:hover { opacity: 1; }
+
+/* Constrain the switch track so it doesn't bleed into adjacent buttons */
+.tertiary-toggle-wrap .switch {
+  flex-shrink: 0;
+  width: 2.6rem;
+  overflow: visible;
+}
+
+.tertiary-toggle-wrap .slider {
+  right: 0;
+}
+
+
+#ctrl-hues {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0.5rem;
+}
+
+/* Two columns aligned under their swatches */
+.ctrl-hues-columns {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+}
+
+.ctrl-primary {
+  flex: 1;
+  min-width: 0;
+  padding-top: 0.6rem;
+}
+
+.ctrl-secondary {
+  flex: 1;
+  min-width: 0;
+  padding-top: 0.6rem;
+}
+
+.section-topbar-actions .copy-json-button,
+.section-topbar #generate-shareable-url-button,
+.section-topbar #copy-theme-json-button {
+  height: 2rem;
+  padding: 0 0.75rem;
+  margin: 0;
+  align-self: center;
+  box-sizing: border-box;
+}
+
+.wrapper-color-picker {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.secondary-color-ctrl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ctrl-group-label {
+  opacity: 0.55;
+  font-size: var(--font-size-small);
   white-space: nowrap;
+}
+
+/* Controls in a horizontal row — right-aligned within the secondary column */
+.secondary-ctrl-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Each control: label left, input right (row layout) */
+.slider-popover-ctrl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ctrl-item-label {
+  opacity: 0.6;
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
+/* Input wrapper — icon + text field, no flex needed (absolute icon) */
+.ctrl-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Icon pinned inside the left edge of the input */
+.input-icon {
+  position: absolute;
+  left: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 1;
+  color: var(--font-color);
+}
+
+.ctrl-value-input {
+  min-width: 80px;
+  width: 5rem;
+  height: 44px;
+  padding: 0 0.5rem 0 1.7rem; /* left room for icon */
+  background: var(--bg-color);
+  color: var(--font-color);
+  border: 1px solid var(--input-border);
+  border-radius: 0.4rem;
+  font-family: var(--typeface-body);
+  font-size: var(--font-size-small);
+  cursor: text;
+  box-sizing: border-box;
+}
+
+.ctrl-value-input:focus {
+  outline: 2px solid var(--font-color-clickable);
+  outline-offset: 1px;
+}
+
+/* Popover slider — shown when any child has focus */
+.slider-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: var(--bg-color);
+  border: 1px solid var(--input-border);
+  border-radius: 0.6rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  min-width: 10rem;
+}
+
+.slider-popover-ctrl:focus-within .slider-popover {
+  display: block;
+}
+
+.slider-popover .slider-input {
+  width: 100%;
+  margin: 0;
+}
+
+/* ── Hue offset: custom dropdown ──────────────────────── */
+
+.wrapper-hue-select {
+  /* inherits .slider-popover-ctrl row layout */
+}
+
+.hue-select-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Custom dropdown trigger */
+.hue-custom-select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.6rem;
+  background: var(--bg-color);
+  color: var(--font-color);
+  border: 1px solid var(--input-border);
+  border-radius: 0.4rem;
+  font-family: var(--typeface-body);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  min-width: 80px;
+  height: 44px;
+  box-sizing: border-box;
+  user-select: none;
+  position: relative;
+}
+
+.hue-custom-select:focus {
+  outline: 2px solid var(--font-color-clickable);
+  outline-offset: 1px;
+}
+
+/* Offset-dial icon in the trigger */
+.hue-trigger-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.hue-select-arrow {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* Dropdown option panel */
+.hue-options-panel {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  z-index: 300;
+  background: var(--bg-color);
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  padding: 0.3rem 0;
+  min-width: 8rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.hue-options-panel[hidden] {
+  display: none;
+}
+
+.hue-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--typeface-body);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hue-option:hover,
+.hue-option[aria-selected="true"] {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.hue-option-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Hue color preview swatch — right-aligned in each option */
+.hue-option-color {
+  margin-left: auto;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: #888;
+  border: 1px solid rgba(128,128,128,0.2);
+}
+
+/* Position panel relative to the trigger */
+.hue-select-row {
+  position: relative;
+}
+
+/* Scrub/type input — always visible inside the trigger */
+.hue-scrub-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: var(--font-color);
+  border: none;
+  outline: none;
+  font-family: var(--typeface-body);
+  font-size: var(--font-size-small);
+  text-align: left;
+  cursor: ew-resize;
+  padding: 0;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+.hue-scrub-input::-webkit-inner-spin-button,
+.hue-scrub-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.hue-scrub-input:focus { cursor: text; outline: none; }
+
+/* Chevron button — unstyled, just wraps the SVG arrow */
+.hue-chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  line-height: 0;
 }
 
 .utility-icon{
@@ -469,13 +755,9 @@ input[type="range"]::-moz-range-track {
     gap: 0;
 }
 
-/* Header: controls bar below swatches */
+/* Hide the internal header bar — controls live outside in #ctrl-hues */
 #root-color-group .color-group__header {
-    display: flex;
-    background: transparent;
-    border-radius: 0;
-    padding: 0.5rem 1rem;
-    order: 2; /* swatches first, controls below */
+    display: none;
 }
 
 /* Hide the text label (root group has no need for it) */

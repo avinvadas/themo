@@ -186,50 +186,20 @@ function initiateColors() {
         return;
     }
 
-    // Step 2: Load the numeric hueDif and update seg-ctrl accordingly
+    // Step 2: Load hueDif from URL and sync the dropdown
     if (params.has('hueDif')) {
         const hueDifParam = params.get('hueDif');
         hueDifValue = parseFloat(hueDifParam);
-
-        if (isNaN(hueDifValue)) {
-            console.error(`Invalid hueDif value: ${hueDifParam}. Falling back to default hueDif.`);
-            hueDifValue = 179.5;  // Default hueDif if NaN
-        }
-
-        // Update the seg-ctrl UI based on the hueDif
-        let segCtrlValue;
-        switch (hueDifValue) {
-            case 179.5:
-                segCtrlValue = 'complementary';
-                break;
-            case 120:
-                segCtrlValue = 'triad';
-                break;
-            case 90:
-                segCtrlValue = 'quad';
-                break;
-            case 45:
-                segCtrlValue = 'analogous';
-                break;
-            default:
-                console.error('Invalid numeric hueDif value:', hueDifValue);  // Log error
-                return;  // Stop execution if hueDif is invalid
-        }
-
-        const segCtrlInput = document.querySelector(`.seg-ctrl input[value="${segCtrlValue}"]`);
-        if (segCtrlInput) {
-            segCtrlInput.checked = true;
-
-            // Manually trigger handleHueChange to update the hueDif and recalculate secondary color
-            handleHueChange({ target: segCtrlInput });
-        } else {
-            console.error('Failed to update seg-ctrl for hueDif:', hueDifValue);  // Log error
+        if (isNaN(hueDifValue) || hueDifValue <= 0 || hueDifValue >= 360) {
+            console.error(`Invalid hueDif value: ${hueDifParam}. Falling back to 180.`);
+            hueDifValue = 180;
         }
     } else {
-        // Fallback: Use default hue difference if no query parameter exists
-        hueDifValue = 179.5;  // Default to complementary if no query parameter
-        setSecondary(hueDifValue); // Ensure secondary color is calculated with the default hueDif
+        hueDifValue = 180;
     }
+    hueDif = hueDifValue;
+    syncHueSelectUI(hueDifValue);
+    setSecondary(hueDifValue);
 
     // Step 3: Set chroma and lightness sliders
     const chromaSlider = document.getElementById('chroma-slider');
@@ -343,14 +313,13 @@ function init() {
     // Root color group — primary + secondary as large swatches
     const rootContainer = document.getElementById('root-color-group');
     if (rootContainer) {
-        const currentHarmony = document.querySelector('.seg-ctrl input:checked')?.value ?? 'complementary';
         rootGroup = new HarmonyGroup({
             label: '',
             primaryColor,
             secondaryColor,
             steps: 2,
             huePath: 'shorter',
-            harmonyType: currentHarmony,
+            harmonyType: snapHarmonyName(hueDif),
             embeddedInput: document.getElementById('color-input'),
             embeddedCopy:  document.getElementById('main-input-copy-to-cb'),
         });
@@ -379,9 +348,7 @@ function handleURLParameters() {
         // 2. Set hueDif before calculating secondary color
         if (params.has('hueDif')) {
             hueDif = parseFloat(params.get('hueDif'));
-            const harmonyValue = HUE_TO_HARMONY[hueDif] ?? 'complementary';
-            const radio = document.querySelector(`input[value="${harmonyValue}"]`);
-            if (radio) radio.checked = true;
+            syncHueSelectUI(hueDif);
         }
 
         // 3. Set secondary color parameters
@@ -592,8 +559,7 @@ function setupRows() {
     }));
 
     // ── Harmony groups (huePath icons live inside each group) ───────────────
-    const currentHarmony = document.querySelector('.seg-ctrl input:checked')?.value
-        ?? 'complementary';
+    const currentHarmony = snapHarmonyName(hueDif);
 
     addGroup(new HarmonyGroup({
         label:          'Analogous wide',
@@ -845,7 +811,6 @@ function updatePrimaryColor(colorValue) {
     } catch (error) {
         console.error("Invalid color value:", error);
     }
-    updateContrastCheck();
 }
 
 
@@ -894,6 +859,9 @@ function updateUIElements() {
     // ColorGroups update themselves via colorManager.notify() observer calls.
     // No manual loop needed here.
 
+    // Update hue option dots + preview dot in the custom dropdown
+    updateHueDotColors();
+
     // Update contrast status
     colorUtils.updateContrastStatus(primaryColor, secondaryColor, tertiaryColor);
 
@@ -906,6 +874,12 @@ function updateUIElements() {
     }
     if (quaternaryColor && quaternaryColor.oklch.c === 0) {
        // console.warn('Warning: Quaternary color chroma is zero');
+    }
+
+    // Refresh tertiary swatch in root group if active
+    if (tertiaryActive) {
+        tertiaryColor = computeTertiaryColor();
+        refreshTertiaryRootSwatch();
     }
 
     // Keep the browser URL in sync so the current theme is always shareable
@@ -938,7 +912,6 @@ function updateSecondaryColorControls() {
         lightnessSlider.value = lightness;
         lightnessInput.value = lightness + '%';
     }
-    updateContrastCheck();
 }
 
 function updateAllScalesRows(primaryColor, secondaryColor, tertiaryColor, quaternaryColor) { 
@@ -972,35 +945,290 @@ function updateColorInputTextColor(colorValue) {
 
 /* Secondary color */
 
+/**
+ * Generate an offset-dial SVG icon for a hue offset.
+ * Shows a circle with a center dot and two arms radiating out to:
+ *   - primary (12 o'clock, dimmed)
+ *   - secondary (clockwise by `degrees`)
+ * @param {number} degrees  hue offset (1–359)
+ * @param {number} [size=16]  rendered px size (viewBox is always 20×20)
+ */
+function generateHueIcon(degrees, size = 16) {
+    const cx = 10, cy = 10, r = 7.5;
+    const rad = (degrees * Math.PI) / 180;
+    // Arm 1: top (12 o'clock = 0°, the primary reference)
+    const x1 = cx, y1 = cy - r;
+    // Arm 2: at the offset angle
+    const x2 = (cx + r * Math.sin(rad)).toFixed(2);
+    const y2 = (cy - r * Math.cos(rad)).toFixed(2);
+    // Opaque arc from 0° to degrees (the "covered range" on the circle border)
+    const largeArc = degrees > 180 ? 1 : 0;
+    const arc = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+    return `<svg class="hue-option-icon" width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="${cx}" cy="${cy}" r="${r}" stroke="currentColor" stroke-width="0.75" fill="none" opacity="0.18"/>
+      <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="1"/>
+      <line x1="${cx}" y1="${cy}" x2="${x1}" y2="${y1}" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" opacity="0.45"/>
+      <line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="${cy}" r="1.4" fill="currentColor"/>
+      <circle cx="${x1}" cy="${y1}" r="1.5" fill="currentColor" opacity="0.45"/>
+      <circle cx="${x2}" cy="${y2}" r="1.5" fill="currentColor"/>
+    </svg>`;
+}
+
+/** Set the trigger icon to reflect the given hue offset. */
+function setHueTriggerIcon(degrees) {
+    const el = document.getElementById('hue-trigger-icon');
+    if (!el) return;
+    if (degrees == null) {
+        el.innerHTML = ''; // custom — no icon
+        return;
+    }
+    el.innerHTML = generateHueIcon(degrees, 20);
+}
+
+/**
+ * Custom hue dropdown.
+ * Hue offset dropdown: preset options panel + always-on scrub/type input in the trigger.
+ */
+function setupHueCustomDropdown() {
+    const trigger    = document.getElementById('hue-custom-select');
+    const panel      = document.getElementById('hue-options-panel');
+    const scrubInput = document.getElementById('hue-scrub-input');
+    const chevronBtn = document.getElementById('hue-chevron-btn');
+    const nativeSel  = document.getElementById('hue-select');
+    if (!trigger || !panel || !nativeSel || !scrubInput || !chevronBtn) return;
+
+    // ── Panel open/close ───────────────────────────────────────────────────
+    function openPanel() {
+        panel.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+    function closePanel() {
+        panel.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    // ── Apply any hue value live ───────────────────────────────────────────
+    function applyHue(val) {
+        val = Math.min(360, Math.max(10, Math.round(val)));
+        hueDif = val;
+        scrubInput.value = val;
+        setHueTriggerIcon(val);
+        const newSec = recalculateSecondaryColor(primaryColor, val, secondaryColor, true);
+        if (newSec?.oklch) {
+            secondaryColor = newSec;
+            colorManager.setSecondaryColor(secondaryColor);
+            updateUIElements();
+        }
+    }
+
+    // ── Scrub drag on the input ────────────────────────────────────────────
+    let dragStartX = null, dragStartVal = null, hasDragged = false;
+
+    scrubInput.addEventListener('pointerdown', e => {
+        dragStartX   = e.clientX;
+        dragStartVal = parseFloat(scrubInput.value) || hueDif;
+        hasDragged   = false;
+        scrubInput.setPointerCapture(e.pointerId);
+    });
+
+    scrubInput.addEventListener('pointermove', e => {
+        if (dragStartX === null) return;
+        const delta = e.clientX - dragStartX;
+        if (Math.abs(delta) > 3) {
+            hasDragged = true;
+            closePanel();
+            applyHue(dragStartVal + delta * 0.8);
+        }
+    });
+
+    scrubInput.addEventListener('pointerup', () => {
+        if (!hasDragged) { scrubInput.focus(); scrubInput.select(); }
+        dragStartX = null;
+    });
+
+    // Direct typing
+    scrubInput.addEventListener('input', () => {
+        const val = parseInt(scrubInput.value, 10);
+        if (!isNaN(val) && val >= 10) applyHue(val);
+    });
+
+    scrubInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') scrubInput.blur();
+        if (e.key === 'Escape') { scrubInput.blur(); closePanel(); }
+    });
+
+    // Clicks on the input shouldn't bubble up to toggle the panel
+    scrubInput.addEventListener('click', e => e.stopPropagation());
+
+    // ── Chevron: toggle panel ──────────────────────────────────────────────
+    chevronBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        panel.hidden ? openPanel() : closePanel();
+    });
+
+    // ── Trigger click (anywhere else on trigger): toggle panel ─────────────
+    trigger.addEventListener('click', e => {
+        if (e.target === scrubInput || e.target === chevronBtn || chevronBtn.contains(e.target)) return;
+        panel.hidden ? openPanel() : closePanel();
+    });
+
+    trigger.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPanel(); }
+        if (e.key === 'Escape') closePanel();
+    });
+
+    // ── Close on outside click ─────────────────────────────────────────────
+    document.addEventListener('click', e => {
+        if (!trigger.contains(e.target) && !panel.contains(e.target)) closePanel();
+    });
+
+    // ── Inject icon + color swatch into each preset option ────────────────
+    panel.querySelectorAll('.hue-option[data-value]').forEach(opt => {
+        const deg = parseFloat(opt.dataset.value);
+        if (!isNaN(deg)) {
+            opt.insertAdjacentHTML('afterbegin', generateHueIcon(deg));
+            const swatch = document.createElement('span');
+            swatch.className = 'hue-option-color';
+            swatch.dataset.hue = opt.dataset.value;
+            opt.insertAdjacentElement('beforeend', swatch);
+        }
+    });
+
+    // ── Preset option selection ────────────────────────────────────────────
+    panel.querySelectorAll('.hue-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const val = parseFloat(opt.dataset.value);
+            if (isNaN(val)) return;
+            panel.querySelectorAll('.hue-option').forEach(o => o.removeAttribute('aria-selected'));
+            opt.setAttribute('aria-selected', 'true');
+            nativeSel.value = opt.dataset.value;
+            closePanel();
+            applyHue(val);
+        });
+    });
+
+    // ── Initial state ──────────────────────────────────────────────────────
+    scrubInput.value = Math.round(hueDif);
+    setHueTriggerIcon(hueDif);
+}
+
+/**
+ * Color each option's hue swatch to preview what secondary would look like
+ * at that hue offset from the current primary.
+ * Also syncs the trigger icon to the current hueDif.
+ */
+function updateHueDotColors() {
+    if (!primaryColor?.oklch) return;
+    const L = secondaryColor?.oklch?.l ?? 0.65;
+    const C = secondaryColor?.oklch?.c ?? 0.18;
+    const primaryHue = primaryColor.oklch.h ?? 0;
+
+    document.querySelectorAll('.hue-option-color[data-hue]').forEach(swatch => {
+        const offsetDeg = parseFloat(swatch.dataset.hue);
+        const hue = (primaryHue + offsetDeg) % 360;
+        try {
+            const col = new Color('oklch', [L, C, hue]);
+            swatch.style.backgroundColor = col.to('srgb').toString({ format: 'hex' });
+        } catch (_) {}
+    });
+}
+
+/**
+ * Adds horizontal pointer-drag scrub behaviour to an input element.
+ * @param {HTMLInputElement} input
+ * @param {object} opts
+ *   getVal()        → current numeric value (internal units)
+ *   setVal(n)       → apply new value and update UI
+ *   sensitivity     → pixels per unit (default 1)
+ *   min / max       → clamp range
+ */
+function addScrubBehavior(input, { getVal, setVal, sensitivity = 1, min = 0, max = 100 }) {
+    let startX = null, startVal = null, dragged = false;
+
+    input.addEventListener('pointerdown', e => {
+        startX   = e.clientX;
+        startVal = getVal();
+        dragged  = false;
+        input.setPointerCapture(e.pointerId);
+    });
+
+    input.addEventListener('pointermove', e => {
+        if (startX === null) return;
+        const delta = e.clientX - startX;
+        if (Math.abs(delta) > 3) {
+            dragged = true;
+            input.blur();
+            const raw = startVal + delta / sensitivity;
+            setVal(Math.min(max, Math.max(min, raw)));
+        }
+    });
+
+    input.addEventListener('pointerup', () => {
+        if (!dragged && startX !== null) { input.focus(); input.select(); }
+        startX = null;
+    });
+
+    // Show resize cursor while not focused
+    input.style.cursor = 'ew-resize';
+    input.addEventListener('focus', () => { input.style.cursor = 'text'; });
+    input.addEventListener('blur',  () => { input.style.cursor = 'ew-resize'; });
+}
+
 function setupSecondaryColorHandlers() {
-    const hueControls = document.querySelectorAll('input[name="colorScheme"]');
-    const chromaSlider = document.getElementById('chroma-slider');
-    const chromaInput = document.getElementById('chroma-input');
+    const chromaSlider   = document.getElementById('chroma-slider');
+    const chromaInput    = document.getElementById('chroma-input');
     const lightnessSlider = document.getElementById('lightness-slider');
-    const lightnessInput = document.getElementById('lightness-input');
+    const lightnessInput  = document.getElementById('lightness-input');
 
     if (chromaSlider && chromaInput) {
         chromaSlider.max = 100;
-
         chromaSlider.addEventListener('input', handleChromaChange);
         chromaInput.addEventListener('input', handleChromaChange);
+
+        // Scrub: internal range 0–100, display as 0.00–1.00 (sensitivity: 2px per 0.01)
+        addScrubBehavior(chromaInput, {
+            getVal: () => lastUserChroma,
+            setVal: val => {
+                lastUserChroma = Math.round(val);
+                chromaSlider.value  = lastUserChroma;
+                chromaInput.value   = (lastUserChroma / 100).toFixed(2);
+                updateSecondaryColor();
+            },
+            sensitivity: 2,   // 2px per unit (each unit = 0.01 chroma)
+            min: 0,
+            max: 100,
+        });
     } else {
         console.error('Chroma controls not found');
     }
-    
-    hueControls.forEach(control => {
-        control.addEventListener('change', handleHueChange);
-    });
+
+    const hueSelect = document.getElementById('hue-select');
+    if (hueSelect) hueSelect.addEventListener('change', handleHueChange);
 
     if (lightnessSlider && lightnessInput) {
         lightnessSlider.addEventListener('input', handleLightnessChange);
         lightnessInput.addEventListener('input', handleLightnessChange);
-        lightnessInput.addEventListener('change', handleSecondaryLightnessChange); // For when the input loses focus
+        lightnessInput.addEventListener('change', handleSecondaryLightnessChange);
+
+        // Scrub: internal range 0–100 (display as "68%"), sensitivity 1px per unit
+        addScrubBehavior(lightnessInput, {
+            getVal: () => lastUserLightness,
+            setVal: val => {
+                lastUserLightness = Math.round(val);
+                lightnessSlider.value = lastUserLightness;
+                lightnessInput.value  = lastUserLightness + '%';
+                updateSecondaryColor();
+            },
+            sensitivity: 1,
+            min: 0,
+            max: 100,
+        });
     } else {
         console.error('Lightness controls not found');
     }
 
-    // Add focus and blur event listeners
+    // Focus/blur guards (prevent hex input capture while typing here)
     if (chromaInput) {
         chromaInput.addEventListener('focus', handleSecondaryInputFocus);
         chromaInput.addEventListener('blur', handleSecondaryInputBlur);
@@ -1010,12 +1238,7 @@ function setupSecondaryColorHandlers() {
         lightnessInput.addEventListener('blur', handleSecondaryInputBlur);
     }
 
-    // Chroma slider max (text input has no min/max attribute)
-    if (chromaSlider) chromaSlider.max = 100;
-    if (lightnessSlider) {
-        lightnessSlider.min = 0;
-        lightnessSlider.max = 100;
-    }
+    if (lightnessSlider) { lightnessSlider.min = 0; lightnessSlider.max = 100; }
 }
 
 function handleLightnessChange(event) {
@@ -1044,30 +1267,70 @@ function handleSecondaryLightnessChange(event) {
 }
 
 
-function handleHueChange(event) {
-    const harmony = event.target.value;
-    hueDif = HARMONY_TO_HUE[harmony] ?? 179.5;
+function handleHueChange() {
+    const select = document.getElementById('hue-select');
+    if (!select) return;
 
-    // Update harmony-type icons inside every HarmonyGroup (including root)
+    if (select.value !== 'custom') {
+        hueDif = parseFloat(select.value);
+    }
+    // When value === 'custom', hueDif was already updated by applyCustomHue() inside setupHueCustomDropdown
+
+    // Update huePath-button icons in every HarmonyGroup (snap to nearest named type)
     [rootGroup, ...rows].forEach(group => {
-        if (group instanceof HarmonyGroup) group.setHarmonyType(harmony);
+        if (group instanceof HarmonyGroup) group.setHarmonyType(snapHarmonyName(hueDif));
     });
 
-    // Calculate new secondary color, passing true for hueChangeOnly
     const newSecondaryColor = recalculateSecondaryColor(primaryColor, hueDif, secondaryColor, true);
-
-    if (!newSecondaryColor || !newSecondaryColor.oklch || typeof newSecondaryColor.oklch.h === 'undefined') {
+    if (!newSecondaryColor?.oklch || typeof newSecondaryColor.oklch.h === 'undefined') {
         console.error('Invalid secondary color calculated:', newSecondaryColor);
         return;
     }
 
     secondaryColor = newSecondaryColor;
-
-    // Update secondary color in ColorManager
     colorManager.setSecondaryColor(secondaryColor);
-
-    // Keep other functionalities intact
     updateUIElements();
+}
+
+/**
+ * Sync the hue-select dropdown (and optional custom input) to reflect a degree value.
+ * Called on init and when loading from URL params.
+ */
+function syncHueSelectUI(degrees) {
+    const select     = document.getElementById('hue-select');
+    const scrubInput = document.getElementById('hue-scrub-input');
+    if (!select) return;
+
+    const step30 = String(Math.round(degrees / 30) * 30);
+    const matchingOption = select.querySelector(`option[value="${step30}"]`);
+    if (matchingOption && step30 !== '0' && step30 !== '360') {
+        select.value = step30;
+    }
+
+    // Always show the actual degree value in the scrub input and trigger icon
+    if (scrubInput) scrubInput.value = Math.round(degrees);
+    setHueTriggerIcon(Math.round(degrees));
+
+    // Mark the correct option as selected in the custom panel
+    const panel = document.getElementById('hue-options-panel');
+    if (panel) {
+        panel.querySelectorAll('.hue-option').forEach(opt => {
+            const match = matchingOption ? opt.dataset.value === step30
+                                         : opt.dataset.value === 'custom';
+            opt.toggleAttribute('aria-selected', match);
+        });
+    }
+}
+
+/** Snap a hue-degree to the nearest named harmony key (for icon display). */
+function snapHarmonyName(deg) {
+    const named = { complementary: 180, triad: 120, quad: 90, analogous: 45 };
+    let nearest = 'complementary', minDist = Infinity;
+    for (const [name, d] of Object.entries(named)) {
+        const dist = Math.min(Math.abs(deg - d), 360 - Math.abs(deg - d));
+        if (dist < minDist) { minDist = dist; nearest = name; }
+    }
+    return nearest;
 }
 
 // calculateChroma is provided by colorUtils — no local duplicate needed
@@ -1180,7 +1443,8 @@ function handleKeyDown(event) {
     const colorInput = document.getElementById('color-input');
     const validKeys = /^[#0-9A-Fa-f]$/;
     
-    if (validKeys.test(event.key) && document.activeElement !== colorInput && !isSecondaryInputFocused) {
+    const hueScrubInput = document.getElementById('hue-scrub-input');
+    if (validKeys.test(event.key) && document.activeElement !== colorInput && !isSecondaryInputFocused && document.activeElement !== hueScrubInput) {
         event.preventDefault();
         colorInput.focus();
         
@@ -1230,21 +1494,8 @@ function setupThemeSwitch() {
     });
 }
 
-/* Setup hue harmony tabs */ 
-function setupHueSelectionControls() {
-    const labels = document.querySelectorAll('.seg-ctrl label');
-    /* Allow keyboard control */
-    labels.forEach(label => {
-        label.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault(); // Prevent default action for space key
-                const radio = document.getElementById(this.getAttribute('for'));
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change')); // Trigger change event on the radio button
-            }
-        });
-    });
-}
+/* Setup hue harmony controls (now a no-op — select handles its own events) */
+function setupHueSelectionControls() {}
 
 
 function initializeMainColorInput() {
@@ -1376,11 +1627,8 @@ function generateShareableURL() {
         params.set('primaryColor', primaryColorValue);
     }
 
-    // Capture the selected hue difference (hueDif) from seg-ctrl and set the numeric value
-    const selectedSegCtrl = document.querySelector('.seg-ctrl input:checked');
-    if (selectedSegCtrl) {
-        params.set('hueDif', HARMONY_TO_HUE[selectedSegCtrl.value] ?? 179.5);
-    }
+    // Capture the current hue difference
+    params.set('hueDif', hueDif);
 
     // Capture chroma and lightness slider values
     const chromaSlider = document.getElementById('chroma-slider');
@@ -1425,8 +1673,7 @@ function updateURL() {
     const primaryColorInput = document.getElementById('color-input');
     if (primaryColorInput) params.set('primaryColor', primaryColorInput.value);
 
-    const selectedSegCtrl = document.querySelector('.seg-ctrl input:checked');
-    if (selectedSegCtrl) params.set('hueDif', HARMONY_TO_HUE[selectedSegCtrl.value] ?? 179.5);
+    params.set('hueDif', hueDif);
 
     const chromaSlider = document.getElementById('chroma-slider');
     const lightnessSlider = document.getElementById('lightness-slider');
@@ -1443,6 +1690,159 @@ function updateURL() {
 }
 
 
+/**
+ * Compute the tertiary color: hue midpoint between primary and secondary
+ * on the *outside* of the covered arc.
+ * tertiaryOffset = 180 + hueDif / 2  (always the far side midpoint)
+ */
+function computeTertiaryColor() {
+    const primaryHue = primaryColor.oklch.h || 0;
+    const tertiaryOffset = 180 + hueDif / 2;
+    const tertiaryHue = (primaryHue + tertiaryOffset) % 360;
+    // Midpoint of L and C between primary and secondary
+    const L = (primaryColor.oklch.l + secondaryColor.oklch.l) / 2;
+    const C = (primaryColor.oklch.c + secondaryColor.oklch.c) / 2;
+    return new Color('oklch', [L, C, tertiaryHue]);
+}
+
+let tertiaryActive = false;
+let tertiaryScaleGroup = null;
+let tertiarySwatch = null;   // the injected swatch DOM node
+
+/** Build and inject the tertiary swatch into the root group's swatch strip. */
+function addTertiaryRootSwatch() {
+    const container = rootGroup?._swatchEl;
+    if (!container || !tertiaryColor) return;
+
+    tertiarySwatch = document.createElement('div');
+    tertiarySwatch.className = 'color-swatch color-swatch--anchor color-swatch--tertiary-hero';
+    tertiarySwatch.setAttribute('tabindex', '0');
+    tertiarySwatch.setAttribute('role', 'button');
+
+    // Copy-on-click
+    tertiarySwatch.addEventListener('click', () => {
+        const hex = tertiarySwatch.style.backgroundColor;
+        navigator.clipboard?.writeText(hex).catch(() => {});
+    });
+
+    // Insert before the secondary swatch (last child), not at the end
+    const secondarySwatch = container.lastElementChild;
+    if (secondarySwatch) {
+        container.insertBefore(tertiarySwatch, secondarySwatch);
+    } else {
+        container.appendChild(tertiarySwatch);
+    }
+    refreshTertiaryRootSwatch();
+}
+
+/** Update color + labels on the existing tertiary swatch, re-appending if rootGroup wiped it. */
+function refreshTertiaryRootSwatch() {
+    if (!tertiarySwatch || !tertiaryColor) return;
+    const container = rootGroup?._swatchEl;
+    if (!container) return;
+    // Re-insert before secondary (last child) if rootGroup._refresh() wiped the container
+    if (!container.contains(tertiarySwatch)) {
+        const secondarySwatch = container.lastElementChild;
+        if (secondarySwatch) {
+            container.insertBefore(tertiarySwatch, secondarySwatch);
+        } else {
+            container.appendChild(tertiarySwatch);
+        }
+    }
+    const hex = tertiaryColor.to('srgb').toString({ format: 'hex' });
+    const textClr = colorUtils.getContrastTextColor(hex);
+    tertiarySwatch.style.backgroundColor = hex;
+    tertiarySwatch.setAttribute('aria-label', `Copy ${hex}`);
+    tertiarySwatch.innerHTML = `
+        <div class="hex-value-container">
+            <span class="contrast-ratio" style="color:${textClr}"></span>
+            <span class="hex-value" style="color:${textClr}">${hex}</span>
+        </div>
+        <span class="swatch__anchor-dot"></span>`;
+}
+
+/** Remove the tertiary swatch from the root group. */
+function removeTertiaryRootSwatch() {
+    tertiarySwatch?.remove();
+    tertiarySwatch = null;
+}
+
+function setupTertiaryToggle() {
+    const checkbox = document.getElementById('tertiary-checkbox');
+    if (!checkbox) return;
+
+    // Patch rootGroup.update once so the tertiary swatch survives every refresh
+    if (rootGroup && !rootGroup._tertiaryPatched) {
+        const _base = rootGroup.update.bind(rootGroup);
+        rootGroup.update = function(payload) {
+            _base(payload);
+            if (tertiaryActive) refreshTertiaryRootSwatch();
+        };
+        rootGroup._tertiaryPatched = true;
+    }
+
+    function enableTertiary() {
+        const palettesSection = document.querySelector('.palettes-section');
+        if (!palettesSection) return;
+
+        tertiaryColor = computeTertiaryColor();
+        colorManager.tertiaryColor = tertiaryColor;
+
+        tertiaryScaleGroup = new ScaleGroup({
+            label:         'Tertiary Scales',
+            sourceColor:    tertiaryColor,
+            steps:          10,
+            isPrimaryBased: false,
+        });
+        tertiaryScaleGroup.update = function() {
+            const t = computeTertiaryColor();
+            this.sourceColor = t;
+            this._refresh();
+        };
+
+        // Insert after "Secondary Scales"
+        let insertAfter = null;
+        for (const el of palettesSection.children) {
+            const h = el.querySelector('.color-group__label, h4');
+            if (h && h.textContent.trim() === 'Secondary Scales') insertAfter = el;
+        }
+        const tempDiv = document.createElement('div');
+        tertiaryScaleGroup.render(tempDiv);
+        const groupEl = tempDiv.firstElementChild;
+        if (insertAfter?.nextSibling) {
+            palettesSection.insertBefore(groupEl, insertAfter.nextSibling);
+        } else {
+            palettesSection.appendChild(groupEl);
+        }
+        colorManager.addObserver(tertiaryScaleGroup);
+        rows.push(tertiaryScaleGroup);
+
+        tertiaryActive = true;
+        addTertiaryRootSwatch();
+    }
+
+    function disableTertiary() {
+        const palettesSection = document.querySelector('.palettes-section');
+        if (tertiaryScaleGroup) {
+            colorManager.removeObserver?.(tertiaryScaleGroup);
+            rows = rows.filter(r => r !== tertiaryScaleGroup);
+            palettesSection?.querySelectorAll('.color-group').forEach(el => {
+                const h = el.querySelector('.color-group__label, h4');
+                if (h && h.textContent.trim() === 'Tertiary Scales') el.remove();
+            });
+            tertiaryScaleGroup = null;
+        }
+        tertiaryColor = null;
+        colorManager.tertiaryColor = null;
+        removeTertiaryRootSwatch();
+        tertiaryActive = false;
+    }
+
+    checkbox.addEventListener('change', () => {
+        checkbox.checked ? enableTertiary() : disableTertiary();
+    });
+}
+
 // Single DOMContentLoaded entry point — all startup logic runs here once.
 document.addEventListener('DOMContentLoaded', () => {
     setupThemeSwitch();
@@ -1452,6 +1852,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (shareButton) {
         shareButton.addEventListener('click', generateShareableURL);
     }
+
+    // Copy Theme JSON button (copies rootGroup swatches JSON)
+    const copyJsonBtn = document.getElementById('copy-theme-json-button');
+    if (copyJsonBtn) {
+        copyJsonBtn.addEventListener('click', () => {
+            if (!rootGroup) return;
+            const json = rootGroup.getSwatchesAsJson();
+            uiManager.copyToClipboard(json, copyJsonBtn);
+        });
+    }
+
+    // Custom hue dropdown
+    setupHueCustomDropdown();
+
+    // Tertiary color toggle
+    setupTertiaryToggle();
 
     // init() must run first — it sets the primaryColor / secondaryColor globals
     // and calls colorManager.setPrimaryColor / setSecondaryColor.
