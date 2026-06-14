@@ -266,6 +266,15 @@ export class ColorGroup {
 
     updateSwatches() {
         if (!this._swatchEl) return;
+
+        // If the embedded input is currently focused, save focus state so we
+        // can restore it after the DOM rebuild (which would otherwise lose focus).
+        const inputWasFocused = this.embeddedInput &&
+            document.activeElement === this.embeddedInput;
+        const savedSelStart = inputWasFocused ? this.embeddedInput.selectionStart : null;
+        const savedSelEnd   = inputWasFocused ? this.embeddedInput.selectionEnd   : null;
+        const savedValue    = inputWasFocused ? this.embeddedInput.value          : null;
+
         this._swatchEl.innerHTML = '';
 
         this.colors.forEach((color, i) => {
@@ -287,43 +296,43 @@ export class ColorGroup {
                 isAnchor && this.anchorIndices[0] === i;
 
             if (isEmbedded) {
-                // Override the swatch from grid → block so position:absolute works cleanly
-                swatch.style.display       = 'block';
-                swatch.style.position      = 'relative';
-                swatch.style.overflow      = 'hidden';
-                swatch.style.minHeight     = '14vh';
-                swatch.style.containerType = 'inline-size'; // enables cqw font scaling
+                // Input + copy button in a flex row, anchored top-left of the swatch
+                const row = document.createElement('div');
+                row.className = 'hero-primary-row';
 
-                // The input fills the swatch completely via inline styles
-                // (inline styles beat all CSS rules, needed because app.js sets
-                //  inline background-color on the input when colors update)
                 Object.assign(this.embeddedInput.style, {
                     display:         'block',
-                    position:        'absolute',
-                    top:             '0',
-                    left:            '0',
-                    width:           '100%',
-                    height:          '100%',
+                    position:        'static',
+                    flex:            '1',
+                    minWidth:        '0',
                     background:      'transparent',
                     color:           textClr,
                     border:          'none',
                     outline:         'none',
                     boxSizing:       'border-box',
-                    padding:         '1rem 1.5rem',
+                    padding:         '0',
                     fontFamily:      'var(--typeface-heading)',
                     fontWeight:      'var(--font-weight-h1)',
-                    fontSize:        'clamp(1rem, 16cqw, 9rem)',
+                    fontSize:        'inherit',   // inherits clamp from .hero-primary-row
                     textTransform:   'uppercase',
                     caretColor:      textClr,
                     cursor:          'text',
                     zIndex:          '1',
+                    width:           '100%',
                 });
-                swatch.appendChild(this.embeddedInput);
+                row.appendChild(this.embeddedInput);
+
                 if (this.embeddedCopy) {
                     this.embeddedCopy.style.removeProperty('display');
                     this.embeddedCopy.style.color = textClr;
-                    swatch.appendChild(this.embeddedCopy);
+                    // Reset any absolute positioning; size and position come from CSS
+                    ['position','bottom','right','top','left','width','height'].forEach(
+                        p => this.embeddedCopy.style.removeProperty(p)
+                    );
+                    row.appendChild(this.embeddedCopy);
                 }
+                swatch.appendChild(row);
+
                 // Suppress click-to-copy on this swatch (user is typing)
                 swatch.removeAttribute('role');
                 swatch.removeAttribute('tabindex');
@@ -388,27 +397,40 @@ export class ColorGroup {
                 const checkIcon = uiManager.createCheckIcon();
                 copyIcon.style.color  = textClr;
                 checkIcon.style.color = textClr;
-                Object.assign(checkIcon.style, {
-                    position: 'absolute', top: '50%', left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                });
-                swatch.append(copyIcon, checkIcon);
 
-                swatch.addEventListener('mouseover', () =>
-                    copyIcon.style.display = 'block');
-                swatch.addEventListener('mouseout',  () =>
-                    copyIcon.style.display = 'none');
+                // icon-slot: both icons stacked at same position, toggled by opacity only
+                const iconSlot = document.createElement('span');
+                iconSlot.className = 'icon-slot';
+                iconSlot.append(copyIcon, checkIcon);
+
+                const infoEl = swatch.querySelector('.hex-value-container');
+                if (infoEl) {
+                    infoEl.append(iconSlot);
+                } else {
+                    swatch.append(iconSlot);
+                }
+
                 swatch.addEventListener('click', () => {
                     navigator.clipboard.writeText(hex);
-                    copyIcon.style.display  = 'none';
-                    checkIcon.style.display = 'block';
-                    setTimeout(() => { checkIcon.style.display = 'none'; }, 1500);
+                    copyIcon.style.opacity  = '0';
+                    checkIcon.style.opacity = '1';
+                    setTimeout(() => {
+                        checkIcon.style.opacity = '';
+                        copyIcon.style.opacity  = '';
+                    }, 1500);
                 });
             }
 
             uiManager.addColorTickerFunctionality(swatch);
             this._swatchEl.appendChild(swatch);
         });
+
+        // Restore input focus and cursor after DOM rebuild
+        if (inputWasFocused && this.embeddedInput) {
+            this.embeddedInput.value = savedValue;
+            this.embeddedInput.focus();
+            this.embeddedInput.setSelectionRange(savedSelStart, savedSelEnd);
+        }
     }
 
     getSwatchesAsJson() {

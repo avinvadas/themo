@@ -8,7 +8,7 @@ import ColorManager from './js/colorManager.js';
 import * as colorUtils from './js/colorUtils.js';
 import { ScalesRow, GeneralColorRow, IndicationRow } from './js/colorPalette.js';
 import { ScaleGroup, HarmonyGroup } from './js/ColorGroup.js';
-import { uiManager, copyTimeouts } from './js/uiManager.js';
+import { uiManager, copyTimeouts, createCopyIcon, createCheckIcon } from './js/uiManager.js';
 import {
     HARMONY_ICONS, HARMONY_TO_HUE, HUE_TO_HARMONY,
     iconSvgFullCircle as iconSvgFullCircle,
@@ -752,8 +752,10 @@ function handleColorPicker(event) {
 function updateColor(value) {
     const colorInput = document.getElementById('color-input');
     const colorPicker = document.getElementById('color-picker-primary');
-    // Update input value
-    colorInput.value = value;
+    // Only write back to input when not focused (avoid clobbering user typing)
+    if (document.activeElement !== colorInput) {
+        colorInput.value = value;
+    }
 
     // Only proceed with color updates if we have a valid hex color
     if (/^#[0-9A-Fa-f]{3}$|^#[0-9A-Fa-f]{6}$/.test(value)) {
@@ -849,8 +851,11 @@ function updateUIElements() {
        // console.warn('Quaternary color is not available for CSS variable update');
     }
 
-    // Update primary color inputs
-    document.getElementById('color-input').value = primaryColor.to('srgb').toString({ format: "hex" });
+    // Update primary color inputs — skip if user is actively typing in the field
+    const _ci = document.getElementById('color-input');
+    if (document.activeElement !== _ci) {
+        _ci.value = primaryColor.to('srgb').toString({ format: "hex" });
+    }
     updateColorPickerAppearance(primaryColor.to('srgb').toString({ format: "hex" }));
 
     // Update UI controls for secondary color
@@ -924,22 +929,21 @@ function updateAllScalesRows(primaryColor, secondaryColor, tertiaryColor, quater
 
 function updateColorInputTextColor(colorValue) {
     const colorInput = document.getElementById('color-input');
-    const copyIcon = document.getElementById('main-input-copy-to-cb').querySelector('svg path');
     const color = new colorUtils.Color(colorValue);
-    
+
     // Calculate relative luminance
     const luminance = color.luminance;
-    
+
     // Choose text color based on luminance
-    // Using Web Content Accessibility Guidelines (WCAG) contrast ratio
     const textColor = luminance > 0.179 ? '#000000' : '#ffffff';
-    
+
     // Update text color and background color
     colorInput.style.color = textColor;
     colorInput.style.backgroundColor = colorValue;
-    
-    // Directly set the fill color of the SVG path
-    copyIcon.setAttribute('fill', textColor);
+
+    // Update icon colors in the primary copy button
+    const copyBtn = document.getElementById('main-input-copy-to-cb');
+    if (copyBtn) copyBtn.querySelectorAll('svg').forEach(svg => { svg.style.color = textColor; });
 }
 
 
@@ -1503,23 +1507,23 @@ function initializeMainColorInput() {
     const mainInputCopyBtn = document.getElementById('main-input-copy-to-cb');
     const colorInput = document.getElementById('color-input');
 
-    /* Copy to clipboard functionality */
+    /* Rebuild primary copy button as icon-slot — same component as secondary/tertiary */
     if (mainInputCopyBtn && colorInput) {
+        const copyIcon  = createCopyIcon();
+        const checkIcon = createCheckIcon();
+        mainInputCopyBtn.innerHTML = '';
+        mainInputCopyBtn.className = 'icon-slot';  // use identical class so CSS is identical
+        mainInputCopyBtn.append(copyIcon, checkIcon);
+
         mainInputCopyBtn.addEventListener('click', () => {
-            const originalValue = colorInput.value;
-            navigator.clipboard.writeText(originalValue).then(() => {
-                // Clear any existing timeout for this element
-                if (copyTimeouts[colorInput.id]) {
-                    clearTimeout(copyTimeouts[colorInput.id]);
-                }
-                // Replace input value with 'Copied!'
-                colorInput.value = 'Copied!';
-                // Set new timeout
-                copyTimeouts[colorInput.id] = setTimeout(() => {
-                    colorInput.value = originalValue;
-                    delete copyTimeouts[colorInput.id];
-                }, 1500);
-            });
+            const hex = colorInput.value;
+            navigator.clipboard.writeText(hex).catch(() => {});
+            copyIcon.style.opacity  = '0';
+            checkIcon.style.opacity = '1';
+            setTimeout(() => {
+                copyIcon.style.opacity  = '';
+                checkIcon.style.opacity = '';
+            }, 1500);
         });
     } else {
         console.error('Main color input or copy button not found');
@@ -1719,13 +1723,41 @@ function addTertiaryRootSwatch() {
     tertiarySwatch.setAttribute('tabindex', '0');
     tertiarySwatch.setAttribute('role', 'button');
 
-    // Copy-on-click
+    // Hex label
+    const info = document.createElement('div');
+    info.className = 'hex-value-container';
+    const ratio = document.createElement('span');
+    ratio.className = 'contrast-ratio';
+    const hexVal = document.createElement('span');
+    hexVal.className = 'hex-value';
+    info.append(ratio, hexVal);
+    tertiarySwatch.appendChild(info);
+
+    // Anchor dot
+    const dot = document.createElement('span');
+    dot.className = 'swatch__anchor-dot';
+    tertiarySwatch.appendChild(dot);
+
+    // Copy icons — stacked in icon-slot, toggled by opacity only (no layout shift)
+    const copyIcon  = createCopyIcon();
+    const checkIcon = createCheckIcon();
+    const iconSlot  = document.createElement('span');
+    iconSlot.className = 'icon-slot';
+    iconSlot.append(copyIcon, checkIcon);
+    info.append(iconSlot);
+
     tertiarySwatch.addEventListener('click', () => {
-        const hex = tertiarySwatch.style.backgroundColor;
+        const hex = tertiarySwatch.dataset.hex || '';
         navigator.clipboard?.writeText(hex).catch(() => {});
+        copyIcon.style.opacity  = '0';
+        checkIcon.style.opacity = '1';
+        setTimeout(() => {
+            checkIcon.style.opacity = '';
+            copyIcon.style.opacity  = '';
+        }, 1500);
     });
 
-    // Insert before the secondary swatch (last child), not at the end
+    // Insert before the secondary swatch (last child)
     const secondarySwatch = container.lastElementChild;
     if (secondarySwatch) {
         container.insertBefore(tertiarySwatch, secondarySwatch);
@@ -1740,6 +1772,7 @@ function refreshTertiaryRootSwatch() {
     if (!tertiarySwatch || !tertiaryColor) return;
     const container = rootGroup?._swatchEl;
     if (!container) return;
+
     // Re-insert before secondary (last child) if rootGroup._refresh() wiped the container
     if (!container.contains(tertiarySwatch)) {
         const secondarySwatch = container.lastElementChild;
@@ -1749,16 +1782,22 @@ function refreshTertiaryRootSwatch() {
             container.appendChild(tertiarySwatch);
         }
     }
+
     const hex = tertiaryColor.to('srgb').toString({ format: 'hex' });
     const textClr = colorUtils.getContrastTextColor(hex);
     tertiarySwatch.style.backgroundColor = hex;
+    tertiarySwatch.dataset.hex = hex;
     tertiarySwatch.setAttribute('aria-label', `Copy ${hex}`);
-    tertiarySwatch.innerHTML = `
-        <div class="hex-value-container">
-            <span class="contrast-ratio" style="color:${textClr}"></span>
-            <span class="hex-value" style="color:${textClr}">${hex}</span>
-        </div>
-        <span class="swatch__anchor-dot"></span>`;
+
+    // Update text nodes (don't wipe innerHTML — copy icon nodes live here)
+    const ratio  = tertiarySwatch.querySelector('.contrast-ratio');
+    const hexVal = tertiarySwatch.querySelector('.hex-value');
+    const copyIcon  = tertiarySwatch.querySelector('.copy-icon');
+    const checkIcon = tertiarySwatch.querySelector('.check-icon');
+    if (ratio)  { ratio.style.color  = textClr; }
+    if (hexVal) { hexVal.style.color = textClr; hexVal.textContent = hex; }
+    if (copyIcon)  copyIcon.style.color  = textClr;
+    if (checkIcon) checkIcon.style.color = textClr;
 }
 
 /** Remove the tertiary swatch from the root group. */
@@ -1819,6 +1858,7 @@ function setupTertiaryToggle() {
 
         tertiaryActive = true;
         addTertiaryRootSwatch();
+        document.querySelector('.ctrl-hues-columns')?.classList.add('has-tertiary');
     }
 
     function disableTertiary() {
@@ -1836,6 +1876,7 @@ function setupTertiaryToggle() {
         colorManager.tertiaryColor = null;
         removeTertiaryRootSwatch();
         tertiaryActive = false;
+        document.querySelector('.ctrl-hues-columns')?.classList.remove('has-tertiary');
     }
 
     checkbox.addEventListener('change', () => {
