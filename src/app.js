@@ -321,7 +321,6 @@ function init() {
             huePath: 'shorter',
             harmonyType: snapHarmonyName(hueDif),
             embeddedInput: document.getElementById('color-input'),
-            embeddedCopy:  document.getElementById('main-input-copy-to-cb'),
         });
         rootGroup.render(rootContainer);
         colorManager.addObserver(rootGroup);
@@ -937,13 +936,10 @@ function updateColorInputTextColor(colorValue) {
     // Choose text color based on luminance
     const textColor = luminance > 0.179 ? '#000000' : '#ffffff';
 
-    // Update text color and background color
+    // Update text color and background color of the input
     colorInput.style.color = textColor;
     colorInput.style.backgroundColor = colorValue;
-
-    // Update icon colors in the primary copy button
-    const copyBtn = document.getElementById('main-input-copy-to-cb');
-    if (copyBtn) copyBtn.querySelectorAll('svg').forEach(svg => { svg.style.color = textColor; });
+    // Icon colors are set directly in ColorGroup.js when swatches rebuild
 }
 
 
@@ -1503,31 +1499,9 @@ function setupHueSelectionControls() {}
 
 
 function initializeMainColorInput() {
-    /* Main color text input field */
-    const mainInputCopyBtn = document.getElementById('main-input-copy-to-cb');
+    /* Main color text input field — copy icon is now built inline by ColorGroup.js */
     const colorInput = document.getElementById('color-input');
-
-    /* Rebuild primary copy button as icon-slot — same component as secondary/tertiary */
-    if (mainInputCopyBtn && colorInput) {
-        const copyIcon  = createCopyIcon();
-        const checkIcon = createCheckIcon();
-        mainInputCopyBtn.innerHTML = '';
-        mainInputCopyBtn.className = 'icon-slot';  // use identical class so CSS is identical
-        mainInputCopyBtn.append(copyIcon, checkIcon);
-
-        mainInputCopyBtn.addEventListener('click', () => {
-            const hex = colorInput.value;
-            navigator.clipboard.writeText(hex).catch(() => {});
-            copyIcon.style.opacity  = '0';
-            checkIcon.style.opacity = '1';
-            setTimeout(() => {
-                copyIcon.style.opacity  = '';
-                checkIcon.style.opacity = '';
-            }, 1500);
-        });
-    } else {
-        console.error('Main color input or copy button not found');
-    }
+    if (!colorInput) console.error('Main color input not found');
 }
 
 

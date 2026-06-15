@@ -322,15 +322,28 @@ export class ColorGroup {
                 });
                 row.appendChild(this.embeddedInput);
 
-                if (this.embeddedCopy) {
-                    this.embeddedCopy.style.removeProperty('display');
-                    this.embeddedCopy.style.color = textClr;
-                    // Reset any absolute positioning; size and position come from CSS
-                    ['position','bottom','right','top','left','width','height'].forEach(
-                        p => this.embeddedCopy.style.removeProperty(p)
-                    );
-                    row.appendChild(this.embeddedCopy);
-                }
+                // Icon-slot: identical construction to non-embedded swatches
+                const embCopyIcon  = uiManager.createCopyIcon();
+                const embCheckIcon = uiManager.createCheckIcon();
+                embCopyIcon.style.color  = textClr;
+                embCheckIcon.style.color = textClr;
+                const embSlot = document.createElement('span');
+                embSlot.className = 'icon-slot';
+                embSlot.append(embCopyIcon, embCheckIcon);
+                row.appendChild(embSlot);
+
+                embSlot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const hexVal = this.embeddedInput?.value || '';
+                    navigator.clipboard.writeText(hexVal).catch(() => {});
+                    embCopyIcon.style.opacity  = '0';
+                    embCheckIcon.style.opacity = '1';
+                    setTimeout(() => {
+                        embCopyIcon.style.opacity  = '';
+                        embCheckIcon.style.opacity = '';
+                    }, 1500);
+                });
+
                 swatch.appendChild(row);
 
                 // Suppress click-to-copy on this swatch (user is typing)
