@@ -303,8 +303,9 @@ export class ColorGroup {
                 Object.assign(this.embeddedInput.style, {
                     display:         'block',
                     position:        'static',
-                    flex:            '1',
-                    minWidth:        '0',
+                    flex:            '0 0 auto',   // size to content, not stretch
+                    minWidth:        '1ch',
+                    width:           'auto',
                     background:      'transparent',
                     color:           textClr,
                     border:          'none',
@@ -317,8 +318,6 @@ export class ColorGroup {
                     textTransform:   'uppercase',
                     caretColor:      textClr,
                     cursor:          'text',
-                    zIndex:          '1',
-                    width:           '100%',
                 });
                 row.appendChild(this.embeddedInput);
 

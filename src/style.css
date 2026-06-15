@@ -777,7 +777,7 @@ input[type="range"]::-moz-range-track {
     cursor: text;
 }
 
-/* Input: inline in the hero-primary-row, no longer absolute */
+/* Input: inline in the hero-primary-row, sized to content like the hex spans */
 #root-color-group #color-input {
     display: block;
     background: transparent;
@@ -792,9 +792,10 @@ input[type="range"]::-moz-range-track {
     box-sizing: border-box;
     cursor: text;
     caret-color: currentColor;
-    flex: 1;
-    min-width: 0;
-    width: 100%;
+    flex: 0 0 auto;
+    min-width: 1ch;
+    width: auto;
+    field-sizing: content;  /* Chrome 123+: input shrinks to text width */
 }
 
 #root-color-group .color-swatch {
