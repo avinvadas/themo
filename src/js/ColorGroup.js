@@ -12,35 +12,288 @@ import * as uiManager  from './uiManager.js';
 import { HARMONY_ICONS } from './icons.js';
 
 // ─── Interpolation curve definitions ─────────────────────────────────────────
-// Each entry: key fed to colorUtils.interpolate, label, SVG path from (2,22)→(22,2)
 
 const CURVES = [
-    {
-        key:   'linear',
-        label: 'Linear',
-        path:  'M 2 22 L 22 2',
-    },
-    {
-        key:   'quadratic',
-        label: 'Ease in',
-        path:  'M 2 22 Q 22 22 22 2',
-    },
-    {
-        key:   'reverse-quadratic',
-        label: 'Ease out',
-        path:  'M 2 22 Q 2 2 22 2',
-    },
-    {
-        key:   'easeInOut',
-        label: 'S-curve',
-        path:  'M 2 22 C 14 22 10 2 22 2',
-    },
+    { key: 'linear',            label: 'Linear',   cp: [0.33, 0.33, 0.67, 0.67] },
+    { key: 'quadratic',         label: 'Ease in',  cp: [0.60, 0.00, 1.00, 0.40] },
+    { key: 'reverse-quadratic', label: 'Ease out', cp: [0.00, 0.60, 0.40, 1.00] },
+    { key: 'easeInOut',         label: 'S-curve',  cp: [0.60, 0.00, 0.40, 1.00] },
 ];
 
-function _curveSVG(path) {
-    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="${path}" stroke="currentColor" stroke-width="1.8"
-              stroke-linecap="round" fill="none"/>
+// Map normalized [0-1] curve coords → SVG pixel coords (10px padding, 100px range)
+function _norm2svg(nx, ny) { return { x: 10 + nx * 100, y: 110 - ny * 100 }; }
+function _svg2norm(sx, sy) { return { nx: (sx - 10) / 100, ny: (110 - sy) / 100 }; }
+
+// ─── Curve Popover singleton ──────────────────────────────────────────────────
+
+let _popoverEl   = null;   // the floating popover DOM node
+let _popoverOwner = null;  // which group opened it
+
+function _closeCurvePopover() {
+    if (_popoverEl) { _popoverEl.remove(); _popoverEl = null; _popoverOwner = null; }
+}
+
+function _openCurvePopover(triggerBtn, group) {
+    // Toggle: close if already open for this group
+    if (_popoverEl && _popoverOwner === group) { _closeCurvePopover(); return; }
+    _closeCurvePopover();
+    _popoverOwner = group;
+
+    const visibleAxes = Object.entries(group.eases).filter(([, v]) => v.visible);
+    let activeAxis = visibleAxes[0][0];
+
+    // ── Build popover shell ──────────────────────────────────────────────────
+    const pop = document.createElement('div');
+    pop.className = 'curve-popover';
+
+    // ── Axis tabs (only if >1 axis) ──────────────────────────────────────────
+    let axisTabs = {};
+    if (visibleAxes.length > 1) {
+        const tabRow = document.createElement('div');
+        tabRow.className = 'curve-popover__axis-tabs';
+        visibleAxes.forEach(([axis]) => {
+            const t = document.createElement('button');
+            t.className = 'curve-axis-tab' + (axis === activeAxis ? ' active' : '');
+            t.textContent = axis.toUpperCase();
+            t.addEventListener('click', () => {
+                activeAxis = axis;
+                Object.entries(axisTabs).forEach(([k, el]) =>
+                    el.classList.toggle('active', k === axis));
+                _refreshPopoverContent(group, activeAxis, presetBtns, editorSvg);
+            });
+            axisTabs[axis] = t;
+            tabRow.appendChild(t);
+        });
+        pop.appendChild(tabRow);
+    }
+
+    // ── Preset segmented control ─────────────────────────────────────────────
+    const segRow = document.createElement('div');
+    segRow.className = 'curve-popover__presets';
+    const presetBtns = [];
+    CURVES.forEach((curve, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'curve-preset-btn';
+        btn.textContent = curve.label;
+        btn.addEventListener('click', () => {
+            group.eases[activeAxis].ease = curve.key;
+            group.eases[activeAxis].bezierCP = [...curve.cp];
+            _setPresetActive(presetBtns, i);
+            _updateEditorCPs(editorSvg, curve.cp);
+            group._refresh();
+            group._refreshCurveIcon();
+        });
+        presetBtns.push(btn);
+        segRow.appendChild(btn);
+    });
+    pop.appendChild(segRow);
+
+    // ── Bezier editor ────────────────────────────────────────────────────────
+    const editorWrap = document.createElement('div');
+    editorWrap.className = 'curve-popover__editor';
+    const editorSvg = _buildEditorSVG(group, () => activeAxis, presetBtns);
+    editorWrap.appendChild(editorSvg);
+    pop.appendChild(editorWrap);
+
+    // Init active state
+    _refreshPopoverContent(group, activeAxis, presetBtns, editorSvg);
+
+    // ── Position & attach ────────────────────────────────────────────────────
+    document.body.appendChild(pop);
+    _positionPopover(pop, triggerBtn);
+    _popoverEl = pop;
+
+    // Close on outside pointerdown (capture so it fires before any other handler)
+    function _outsideHandler(e) {
+        if (!pop.contains(e.target) && !triggerBtn.contains(e.target)) {
+            _closeCurvePopover();
+            document.removeEventListener('pointerdown', _outsideHandler, true);
+        }
+    }
+    setTimeout(() => document.addEventListener('pointerdown', _outsideHandler, true), 0);
+}
+
+function _positionPopover(pop, trigger) {
+    const r = trigger.getBoundingClientRect();
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+    pop.style.position = 'absolute';
+    pop.style.visibility = 'hidden';
+
+    // Measure and position on next frame so the popover has dimensions
+    requestAnimationFrame(() => {
+        const popW = pop.offsetWidth;
+        const popH = pop.offsetHeight;
+
+        // Right-align popover to trigger button's right edge
+        let left = Math.round(r.right + scrollX - popW);
+        // Clamp within viewport horizontally
+        left = Math.max(scrollX + 8, Math.min(left, scrollX + window.innerWidth - popW - 8));
+
+        let top = Math.round(r.bottom + scrollY + 10);
+        let arrowUp = true;
+        // Flip above if too close to bottom
+        if (r.bottom + popH + 10 > window.innerHeight - 8) {
+            top = Math.round(r.top + scrollY - popH - 10);
+            arrowUp = false;
+        }
+
+        // Arrow offset: horizontal position of trigger button center relative to popover left
+        const arrowX = Math.round(r.left + r.width / 2 + scrollX - left);
+        pop.style.setProperty('--arrow-x', `${arrowX}px`);
+        pop.classList.toggle('arrow-up', arrowUp);
+        pop.classList.toggle('arrow-down', !arrowUp);
+
+        pop.style.left = left + 'px';
+        pop.style.top  = top + 'px';
+        pop.style.visibility = '';
+    });
+}
+
+function _refreshPopoverContent(group, axis, presetBtns, editorSvg) {
+    const cfg = group.eases[axis];
+    const activeIdx = CURVES.findIndex(c => c.key === cfg.ease);
+    _setPresetActive(presetBtns, activeIdx);
+    const cp = cfg.bezierCP || (CURVES[activeIdx]?.cp ?? CURVES[0].cp);
+    _updateEditorCPs(editorSvg, cp);
+}
+
+function _setPresetActive(btns, idx) {
+    btns.forEach((b, i) => b.classList.toggle('active', i === idx));
+}
+
+function _updateEditorCPs(svg, [x1n, y1n, x2n, y2n]) {
+    const p0 = _norm2svg(0, 0), p3 = _norm2svg(1, 1);
+    const c1 = _norm2svg(x1n, y1n), c2 = _norm2svg(x2n, y2n);
+    svg.querySelector('.be-curve').setAttribute('d',
+        `M ${p0.x} ${p0.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${p3.x} ${p3.y}`);
+    svg.querySelector('.be-line1').setAttribute('x2', c1.x);
+    svg.querySelector('.be-line1').setAttribute('y2', c1.y);
+    svg.querySelector('.be-line2').setAttribute('x2', c2.x);
+    svg.querySelector('.be-line2').setAttribute('y2', c2.y);
+    const [h1, h2] = svg.querySelectorAll('.be-handle');
+    h1.setAttribute('cx', c1.x); h1.setAttribute('cy', c1.y);
+    h2.setAttribute('cx', c2.x); h2.setAttribute('cy', c2.y);
+}
+
+function _buildEditorSVG(group, getAxis, presetBtns) {
+    const p0 = _norm2svg(0, 0);  // 10, 110
+    const p3 = _norm2svg(1, 1);  // 110, 10
+
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 120 120');
+    svg.classList.add('bezier-editor');
+
+    // Grid
+    const grid = [
+        [p0.x, p3.y, p0.x, p0.y],  // left edge
+        [p0.x, p0.y, p3.x, p0.y],  // top edge
+        [p3.x, p0.y, p3.x, p0.y],  // right edge (collapsed)
+        [p0.x, p0.y, p3.x, p3.y],  // diagonal guide
+    ];
+    ['', '', '', '2,3'].forEach((dash, gi) => {
+        if (gi === 2) return;
+        const l = document.createElementNS(NS, 'line');
+        l.setAttribute('x1', grid[gi][0]); l.setAttribute('y1', grid[gi][1]);
+        l.setAttribute('x2', grid[gi][2]); l.setAttribute('y2', grid[gi][3]);
+        l.setAttribute('stroke', 'currentColor');
+        l.setAttribute('stroke-opacity', gi < 2 ? '0.15' : '0.08');
+        l.setAttribute('stroke-width', '1');
+        if (dash) l.setAttribute('stroke-dasharray', dash);
+        svg.appendChild(l);
+    });
+
+    // Control lines (dashed, from anchor to handle)
+    const mkLine = (cls, x1, y1) => {
+        const l = document.createElementNS(NS, 'line');
+        l.classList.add(cls);
+        l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+        l.setAttribute('x2', x1); l.setAttribute('y2', y1); // updated later
+        l.setAttribute('stroke', 'currentColor');
+        l.setAttribute('stroke-opacity', '0.35');
+        l.setAttribute('stroke-width', '1');
+        l.setAttribute('stroke-dasharray', '2,2');
+        return l;
+    };
+    svg.appendChild(mkLine('be-line1', p0.x, p0.y));
+    svg.appendChild(mkLine('be-line2', p3.x, p3.y));
+
+    // Curve path
+    const path = document.createElementNS(NS, 'path');
+    path.classList.add('be-curve');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(path);
+
+    // Fixed anchor dots
+    [p0, p3].forEach(pt => {
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', pt.x); c.setAttribute('cy', pt.y);
+        c.setAttribute('r', '3'); c.setAttribute('fill', 'currentColor');
+        svg.appendChild(c);
+    });
+
+    // Draggable handles
+    const handles = [null, null];
+    [0, 1].forEach(hi => {
+        const h = document.createElementNS(NS, 'circle');
+        h.classList.add('be-handle');
+        h.setAttribute('r', '5');
+        h.setAttribute('fill', 'currentColor');
+        h.setAttribute('fill-opacity', '0.25');
+        h.setAttribute('stroke', 'currentColor');
+        h.setAttribute('stroke-width', '1.5');
+        h.style.cursor = 'grab';
+        handles[hi] = h;
+        svg.appendChild(h);
+
+        let dragging = false;
+        h.addEventListener('pointerdown', e => {
+            dragging = true;
+            h.style.cursor = 'grabbing';
+            h.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
+        h.addEventListener('pointermove', e => {
+            if (!dragging) return;
+            const svgRect = svg.getBoundingClientRect();
+            const scaleX = 120 / svgRect.width;
+            const scaleY = 120 / svgRect.height;
+            const sx = Math.max(10, Math.min(110, (e.clientX - svgRect.left) * scaleX));
+            const sy = Math.max(10, Math.min(110, (e.clientY - svgRect.top)  * scaleY));
+            const { nx, ny } = _svg2norm(sx, sy);
+
+            const axis = getAxis();
+            const cp = [...(group.eases[axis].bezierCP || CURVES[0].cp)];
+            cp[hi * 2]     = Math.max(0, Math.min(1, nx));
+            cp[hi * 2 + 1] = Math.max(0, Math.min(1, ny));
+            group.eases[axis].bezierCP = cp;
+            group.eases[axis].ease = 'bezier';
+            _setPresetActive(presetBtns, -1);   // deselect all presets
+            _updateEditorCPs(svg, cp);
+            group._refresh();
+            group._refreshCurveIcon();
+        });
+        h.addEventListener('pointerup', () => {
+            dragging = false;
+            h.style.cursor = 'grab';
+        });
+    });
+
+    return svg;
+}
+
+function _curveSVG(key) {
+    const curve = CURVES.find(c => c.key === key) || CURVES[0];
+    const [x1n, y1n, x2n, y2n] = curve.cp;
+    const p0 = _norm2svg(0, 0), p3 = _norm2svg(1, 1);
+    const c1 = _norm2svg(x1n, y1n), c2 = _norm2svg(x2n, y2n);
+    return `<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M ${p0.x} ${p0.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${p3.x} ${p3.y}"
+              stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none"/>
     </svg>`;
 }
 
@@ -150,17 +403,24 @@ export class ColorGroup {
             header.appendChild(typeCtrl);
         }
 
+        // Steps stepper
+        header.appendChild(this._buildStepper());
+
         // Axis curve pickers
         const curvePickers = this._buildCurvePickers();
         if (curvePickers) header.appendChild(curvePickers);
 
-        // Steps stepper
-        header.appendChild(this._buildStepper());
-
         // Copy JSON
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-json-button';
-        copyBtn.textContent = 'Copy as JSON';
+        copyBtn.title = 'Copy as JSON';
+        copyBtn.innerHTML = `<svg class="copy-json-icon" viewBox="0 0 22 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <rect x="7" y="1" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.5"/>
+  <rect x="1" y="6" width="14" height="17" rx="2" fill="var(--bg-color)" stroke="currentColor" stroke-width="1.5"/>
+  <text x="8" y="18.5" text-anchor="middle" dominant-baseline="auto"
+        font-family="monospace" font-size="7.5" font-weight="600"
+        fill="currentColor" letter-spacing="-0.5">{}</text>
+</svg>`;
         copyBtn.addEventListener('click', () =>
             uiManager.copyToClipboard(this.getSwatchesAsJson(), copyBtn));
         header.appendChild(copyBtn);
@@ -172,38 +432,28 @@ export class ColorGroup {
         const visible = Object.entries(this.eases).filter(([, v]) => v.visible);
         if (!visible.length) return null;
 
-        const row = document.createElement('div');
-        row.className = 'color-group__curves';
+        const activeEase = this.eases[visible[0][0]].ease;
+        const btn = document.createElement('button');
+        btn.className = 'curve-trigger-btn';
+        btn.title = 'Interpolation curve';
+        btn.innerHTML = _curveSVG(activeEase);
+        this._curveTriggerBtn = btn;
 
-        visible.forEach(([axis, cfg]) => {
-            const axisEl = document.createElement('div');
-            axisEl.className = 'curve-axis';
-
-            const lbl = document.createElement('span');
-            lbl.className = 'curve-axis__label';
-            lbl.textContent = axis.toUpperCase();
-            axisEl.appendChild(lbl);
-
-            CURVES.forEach(curve => {
-                const btn = document.createElement('button');
-                btn.className = 'curve-btn' +
-                    (cfg.ease === curve.key ? ' curve-btn--active' : '');
-                btn.title     = curve.label;
-                btn.innerHTML = _curveSVG(curve.path);
-                btn.addEventListener('click', () => {
-                    this.eases[axis].ease = curve.key;
-                    axisEl.querySelectorAll('.curve-btn').forEach((b, i) =>
-                        b.classList.toggle('curve-btn--active',
-                            CURVES[i].key === curve.key));
-                    this._refresh();
-                });
-                axisEl.appendChild(btn);
-            });
-
-            row.appendChild(axisEl);
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            _openCurvePopover(btn, this);
         });
 
-        return row;
+        return btn;
+    }
+
+    // Called by popover after a curve change to refresh the trigger icon
+    _refreshCurveIcon() {
+        if (!this._curveTriggerBtn) return;
+        const visible = Object.entries(this.eases).filter(([, v]) => v.visible);
+        if (!visible.length) return;
+        const ease = this.eases[visible[0][0]].ease;
+        this._curveTriggerBtn.innerHTML = _curveSVG(ease);
     }
 
     _buildStepper() {
@@ -508,6 +758,7 @@ export class ScaleGroup extends ColorGroup {
             },
             interpolation:  this.eases.l.ease,
             lightnessEase:  this.eases.l.ease,
+            bezierCP:       this.eases.l.bezierCP,
             chromaEase:    'constant',
             huePath:       'constant',
             includeSource: !this.isNeutral,
@@ -605,6 +856,9 @@ export class HarmonyGroup extends ColorGroup {
         const lEase = this.eases.l.ease;
         const cEase = this.eases.c.ease;
         const hEase = this.eases.h.ease;
+        const lCP   = this.eases.l.bezierCP ? { bezierCP: this.eases.l.bezierCP } : {};
+        const cCP   = this.eases.c.bezierCP ? { bezierCP: this.eases.c.bezierCP } : {};
+        const hCP   = this.eases.h.bezierCP ? { bezierCP: this.eases.h.bezierCP } : {};
 
         this.anchorIndices = [0, steps - 1];
         const colors = new Array(steps);
@@ -617,8 +871,8 @@ export class HarmonyGroup extends ColorGroup {
             for (let i = 0; i < steps; i++) {
                 const t  = i / Math.max(steps - 1, 1);
                 const h  = (360 * i / steps + hue1) % 360;
-                const lv = colorUtils.interpolate(primary.oklch.l, secondary.oklch.l, t, lEase);
-                const cv = colorUtils.interpolate(primary.oklch.c, secondary.oklch.c, t, cEase);
+                const lv = colorUtils.interpolate(primary.oklch.l, secondary.oklch.l, t, lEase, lCP);
+                const cv = colorUtils.interpolate(primary.oklch.c, secondary.oklch.c, t, cEase, cCP);
                 colors[i] = new colorUtils.Color('oklch', [lv, cv, h]);
             }
             colors[0]         = primary;
@@ -639,10 +893,10 @@ export class HarmonyGroup extends ColorGroup {
 
             for (let i = 1; i < steps - 1; i++) {
                 const t  = i / (steps - 1);
-                const tH = colorUtils.interpolate(0, 1, t, hEase);
+                const tH = colorUtils.interpolate(0, 1, t, hEase, hCP);
                 const h  = (hue1 + selectedPath * tH + 360) % 360;
-                const lv = colorUtils.interpolate(primary.oklch.l, secondary.oklch.l, t, lEase);
-                const cv = colorUtils.interpolate(primary.oklch.c, secondary.oklch.c, t, cEase);
+                const lv = colorUtils.interpolate(primary.oklch.l, secondary.oklch.l, t, lEase, lCP);
+                const cv = colorUtils.interpolate(primary.oklch.c, secondary.oklch.c, t, cEase, cCP);
                 colors[i] = new colorUtils.Color('oklch', [lv, cv, h]);
             }
         }

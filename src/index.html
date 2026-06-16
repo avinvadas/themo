@@ -76,17 +76,27 @@
 
     <section class="section">
 
-      <!-- Row 1: label left | toggle + copy buttons right -->
+      <!-- Row 1: label left | seg control center | copy button right -->
       <div class="section-topbar">
         <label id="main-input-label" class="heading-05">Type your primary color hex:</label>
+        <!-- Hidden checkbox keeps existing JS working unchanged -->
+        <input type="checkbox" id="tertiary-checkbox" aria-hidden="true" style="display:none">
+        <div class="swatch-count-seg" role="group" aria-label="Number of hero swatches">
+          <button class="swatch-count-btn active" data-value="2" aria-pressed="true" title="Two swatches">
+            <svg viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="10" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+              <rect x="13" y="1" width="10" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+            </svg>
+          </button>
+          <button class="swatch-count-btn" data-value="3" aria-pressed="false" title="Three swatches">
+            <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="8.67" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+              <rect x="11.67" y="1" width="8.67" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+              <rect x="22.33" y="1" width="8.67" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+            </svg>
+          </button>
+        </div>
         <div class="section-topbar-actions">
-          <label class="toggle-comp tertiary-toggle-wrap body-text-small" for="tertiary-checkbox">
-            Include tertiary color
-            <label class="switch">
-              <input type="checkbox" id="tertiary-checkbox" aria-label="Include tertiary color">
-              <span class="slider round"></span>
-            </label>
-          </label>
           <button class="copy-json-button" id="generate-shareable-url-button">Copy theme URL</button>
         </div>
       </div>
@@ -110,8 +120,8 @@
           <!-- Left column: aligns under primary swatch -->
           <div class="ctrl-primary">
             <div class="wrapper-color-picker">
-              <input class="color-thumb" id="color-picker-primary" type="color" value="#000000" title="Pick primary color" />
               <label class="body-text-small">Adjust primary color</label>
+              <input class="color-thumb" id="color-picker-primary" type="color" value="#000000" title="Pick primary color" />
             </div>
           </div>
 

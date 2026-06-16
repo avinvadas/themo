@@ -1856,6 +1856,19 @@ function setupTertiaryToggle() {
     checkbox.addEventListener('change', () => {
         checkbox.checked ? enableTertiary() : disableTertiary();
     });
+
+    // Segmented control wires to the hidden checkbox
+    document.querySelectorAll('.swatch-count-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const want3 = btn.dataset.value === '3';
+            document.querySelectorAll('.swatch-count-btn').forEach(b => {
+                b.classList.toggle('active', b === btn);
+                b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+            });
+            checkbox.checked = want3;
+            checkbox.dispatchEvent(new Event('change'));
+        });
+    });
 }
 
 // Single DOMContentLoaded entry point — all startup logic runs here once.

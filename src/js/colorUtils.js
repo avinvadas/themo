@@ -75,13 +75,14 @@ export function adjustHueToHarmonize(baseHue, primaryHue, secondaryHue) {
 
 // Generate color scale set (for color palettes)
 export function generateColorScale(sourceColor, config) {
-    const { steps, startPoint, endPoint, interpolation, includeSource, isNeutral, neutralChroma, lightnessEase, chromaEase, huePath } = config;
+    const { steps, startPoint, endPoint, interpolation, includeSource, isNeutral, neutralChroma, lightnessEase, chromaEase, huePath, bezierCP } = config;
     const scaleArray = [];
+    const bezierOpts = bezierCP ? { bezierCP } : {};
 
     for (let i = 0; i < steps; i++) {
         let t = i / (steps - 1);
-        
-        let l = interpolate(startPoint.l, endPoint.l, t, lightnessEase || interpolation);
+
+        let l = interpolate(startPoint.l, endPoint.l, t, lightnessEase || interpolation, bezierOpts);
         let c, h;
 
         if (isNeutral) {
@@ -173,6 +174,14 @@ export function interpolate(start, end, t, method = 'linear', options = {}) {
         case 'cosineWave':
             result = start + (end - start) * cosineWave(t);
             break;
+        case 'bezier': {
+            // Simplified bezier: use t as curve parameter directly (not CSS timing fn)
+            const [, by1,, by2] = options.bezierCP || [0.33, 0.33, 0.67, 0.67];
+            const bt = 1 - t;
+            const bezierT = 3 * bt * bt * t * by1 + 3 * bt * t * t * by2 + t * t * t;
+            result = start + (end - start) * bezierT;
+            break;
+        }
         default:
             throw new Error(`Unsupported interpolation method: ${method}`);
     }
