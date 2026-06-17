@@ -952,3 +952,134 @@ export class HarmonyGroup extends ColorGroup {
         this._refresh();
     }
 }
+
+// ─── TriHarmonyGroup ──────────────────────────────────────────────────────────
+// Single harmony palette evenly distributed across primary → secondary,
+// and primary → secondary → tertiary when tertiary is active.
+
+export class TriHarmonyGroup extends ColorGroup {
+    constructor({ label, primaryColor, secondaryColor, tertiaryColor = null,
+                  steps = 8, huePath = 'shorter', harmonyType = 'complementary' }) {
+        super({
+            label,
+            steps,
+            anchors: [
+                { color: primaryColor,   id: 'primary',   deletable: false },
+                { color: secondaryColor, id: 'secondary', deletable: false },
+            ],
+        });
+        this.tertiaryColor = tertiaryColor;
+        this.huePath       = huePath;
+        this.harmonyType   = harmonyType;
+        this.anchorIndices = [0, steps - 1];
+        this._pathBtns     = [];
+    }
+
+    _curveConfig() {
+        return {
+            l: { visible: true,  ease: 'linear' },
+            c: { visible: true,  ease: 'linear' },
+            h: { visible: true,  ease: 'linear' },
+        };
+    }
+
+    _interpolateSegment(colorA, colorB, segSteps) {
+        const lEase = this.eases.l.ease;
+        const cEase = this.eases.c.ease;
+        const hEase = this.eases.h.ease;
+        const lCP   = this.eases.l.bezierCP ? { bezierCP: this.eases.l.bezierCP } : {};
+        const cCP   = this.eases.c.bezierCP ? { bezierCP: this.eases.c.bezierCP } : {};
+        const hCP   = this.eases.h.bezierCP ? { bezierCP: this.eases.h.bezierCP } : {};
+
+        const hue1    = colorA.oklch.h ?? 0;
+        const hue2    = colorB.oklch.h ?? 0;
+        const hueDiff = (hue2 - hue1 + 360) % 360;
+
+        let arc;
+        if (this.huePath === 'full-circle') {
+            arc = 360 / (this.tertiaryColor ? 3 : 1);
+        } else {
+            let shorter = hueDiff <= 180 ? hueDiff : hueDiff - 360;
+            let longer  = hueDiff <= 180 ? hueDiff - 360 : hueDiff;
+            arc = this.huePath === 'shorter' ? shorter : longer;
+        }
+
+        const out = [];
+        for (let i = 0; i < segSteps; i++) {
+            const t  = i / Math.max(segSteps - 1, 1);
+            const tH = colorUtils.interpolate(0, 1, t, hEase, hCP);
+            const h  = (hue1 + arc * tH + 360) % 360;
+            const lv = colorUtils.interpolate(colorA.oklch.l, colorB.oklch.l, t, lEase, lCP);
+            const cv = colorUtils.interpolate(colorA.oklch.c, colorB.oklch.c, t, cEase, cCP);
+            out.push(new colorUtils.Color('oklch', [lv, cv, h]));
+        }
+        out[0]             = colorA;
+        out[segSteps - 1]  = colorB;
+        return out;
+    }
+
+    generateColors() {
+        const primary   = this.anchors[0]?.color;
+        const secondary = this.anchors[1]?.color;
+        if (!primary?.oklch || !secondary?.oklch) return [];
+
+        const tertiary = this.tertiaryColor;
+        const { steps } = this;
+
+        if (tertiary?.oklch) {
+            // Split steps evenly across two segments; secondary is the shared midpoint
+            const seg1Steps = Math.ceil(steps / 2) + 1;   // primary → secondary
+            const seg2Steps = Math.floor(steps / 2) + 1;  // secondary → tertiary
+            const seg1 = this._interpolateSegment(primary,   secondary, seg1Steps);
+            const seg2 = this._interpolateSegment(secondary, tertiary,  seg2Steps);
+            const combined = [...seg1, ...seg2.slice(1)];  // drop duplicate secondary
+            this.anchorIndices = [0, seg1Steps - 1, combined.length - 1];
+            return combined;
+        } else {
+            this.anchorIndices = [0, steps - 1];
+            return this._interpolateSegment(primary, secondary, steps);
+        }
+    }
+
+    renderControls() {
+        const icons  = HARMONY_ICONS[this.harmonyType] ?? HARMONY_ICONS.complementary;
+        const paths  = ['longer', 'shorter', 'full-circle'];
+        const labels = ['Wide arc', 'Narrow arc', 'Full circle'];
+
+        const wrap = document.createElement('div');
+        wrap.className = 'harmony-path-ctrl';
+
+        this._pathBtns = [];
+        paths.forEach((path, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'harmony-path-btn' +
+                (this.huePath === path ? ' harmony-path-btn--active' : '');
+            btn.title     = labels[i];
+            btn.innerHTML = icons[i];
+            btn.addEventListener('click', () => {
+                this.huePath = path;
+                this._pathBtns.forEach((b, j) =>
+                    b.classList.toggle('harmony-path-btn--active', j === i));
+                this._refresh();
+            });
+            wrap.appendChild(btn);
+            this._pathBtns.push(btn);
+        });
+
+        return wrap;
+    }
+
+    setHarmonyType(type) {
+        this.harmonyType = type;
+        const icons = HARMONY_ICONS[type] ?? HARMONY_ICONS.complementary;
+        this._pathBtns.forEach((btn, i) => { btn.innerHTML = icons[i]; });
+    }
+
+    update({ primaryColor, secondaryColor, tertiaryColor }) {
+        if (!primaryColor?.oklch || !secondaryColor?.oklch) return;
+        this.anchors[0].color = primaryColor;
+        this.anchors[1].color = secondaryColor;
+        this.tertiaryColor    = tertiaryColor ?? null;
+        this._refresh();
+    }
+}

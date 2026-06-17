@@ -7,7 +7,7 @@
 import ColorManager from './js/colorManager.js';
 import * as colorUtils from './js/colorUtils.js';
 import { ScalesRow, GeneralColorRow, IndicationRow } from './js/colorPalette.js';
-import { ScaleGroup, HarmonyGroup } from './js/ColorGroup.js';
+import { ScaleGroup, HarmonyGroup, TriHarmonyGroup } from './js/ColorGroup.js';
 import { uiManager, copyTimeouts, createCopyIcon, createCheckIcon } from './js/uiManager.js';
 import {
     HARMONY_ICONS, HARMONY_TO_HUE, HUE_TO_HARMONY,
@@ -557,33 +557,16 @@ function setupRows() {
         neutralChroma:   0.05,
     }));
 
-    // ── Harmony groups (huePath icons live inside each group) ───────────────
+    // ── Harmony group ───────────────────────────────────────────────────────
     const currentHarmony = snapHarmonyName(hueDif);
 
-    addGroup(new HarmonyGroup({
-        label:          'Analogous wide',
+    addGroup(new TriHarmonyGroup({
+        label:          'Harmony',
         primaryColor,
         secondaryColor,
-        steps:           6,
-        huePath:        'longer',
-        harmonyType:     currentHarmony,
-    }));
-
-    addGroup(new HarmonyGroup({
-        label:          'Analogous narrow',
-        primaryColor,
-        secondaryColor,
-        steps:           6,
+        tertiaryColor:  tertiaryActive ? tertiaryColor : null,
+        steps:           8,
         huePath:        'shorter',
-        harmonyType:     currentHarmony,
-    }));
-
-    addGroup(new HarmonyGroup({
-        label:          'Full circumference',
-        primaryColor,
-        secondaryColor,
-        steps:           6,
-        huePath:        'full-circle',
         harmonyType:     currentHarmony,
     }));
 
@@ -1278,7 +1261,7 @@ function handleHueChange() {
 
     // Update huePath-button icons in every HarmonyGroup (snap to nearest named type)
     [rootGroup, ...rows].forEach(group => {
-        if (group instanceof HarmonyGroup) group.setHarmonyType(snapHarmonyName(hueDif));
+        if (group instanceof HarmonyGroup || group instanceof TriHarmonyGroup) group.setHarmonyType(snapHarmonyName(hueDif));
     });
 
     const newSecondaryColor = recalculateSecondaryColor(primaryColor, hueDif, secondaryColor, true);
@@ -1731,13 +1714,7 @@ function addTertiaryRootSwatch() {
         }, 1500);
     });
 
-    // Insert before the secondary swatch (last child)
-    const secondarySwatch = container.lastElementChild;
-    if (secondarySwatch) {
-        container.insertBefore(tertiarySwatch, secondarySwatch);
-    } else {
-        container.appendChild(tertiarySwatch);
-    }
+    container.appendChild(tertiarySwatch);
     refreshTertiaryRootSwatch();
 }
 
@@ -1747,14 +1724,9 @@ function refreshTertiaryRootSwatch() {
     const container = rootGroup?._swatchEl;
     if (!container) return;
 
-    // Re-insert before secondary (last child) if rootGroup._refresh() wiped the container
+    // Re-append at end if rootGroup._refresh() wiped the container
     if (!container.contains(tertiarySwatch)) {
-        const secondarySwatch = container.lastElementChild;
-        if (secondarySwatch) {
-            container.insertBefore(tertiarySwatch, secondarySwatch);
-        } else {
-            container.appendChild(tertiarySwatch);
-        }
+        container.appendChild(tertiarySwatch);
     }
 
     const hex = tertiaryColor.to('srgb').toString({ format: 'hex' });
@@ -1778,6 +1750,13 @@ function refreshTertiaryRootSwatch() {
 function removeTertiaryRootSwatch() {
     tertiarySwatch?.remove();
     tertiarySwatch = null;
+}
+
+function _refreshTriHarmony() {
+    const group = rows.find(r => r instanceof TriHarmonyGroup);
+    if (!group) return;
+    group.tertiaryColor = tertiaryActive ? tertiaryColor : null;
+    group._refresh();
 }
 
 function setupTertiaryToggle() {
@@ -1833,6 +1812,7 @@ function setupTertiaryToggle() {
         tertiaryActive = true;
         addTertiaryRootSwatch();
         document.querySelector('.ctrl-hues-columns')?.classList.add('has-tertiary');
+        _refreshTriHarmony();
     }
 
     function disableTertiary() {
@@ -1851,6 +1831,7 @@ function setupTertiaryToggle() {
         removeTertiaryRootSwatch();
         tertiaryActive = false;
         document.querySelector('.ctrl-hues-columns')?.classList.remove('has-tertiary');
+        _refreshTriHarmony();
     }
 
     checkbox.addEventListener('change', () => {
