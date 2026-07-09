@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "themo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "dist", "-p", "1234", "-s"],
+      "cwd": "/Users/avinvadas/workspace-main/themo/src",
+      "port": 1234
+    }
+  ]
+}

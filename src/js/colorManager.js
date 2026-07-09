@@ -72,27 +72,26 @@ export default class ColorManager {
   updateIndicationColors() {
     if (!this.primaryColor || !this.secondaryColor) return;
 
-    const avgLightness = (this.primaryColor.lch.l + this.secondaryColor.lch.l) / 2;
-    const maxChroma = Math.max(this.primaryColor.lch.c, this.secondaryColor.lch.c);
-    const avgHue = (this.primaryColor.lch.h + this.secondaryColor.lch.h) / 2;
+    const avgLightness = (this.primaryColor.oklch.l + this.secondaryColor.oklch.l) / 2;
+    const maxChroma = Math.max(this.primaryColor.oklch.c, this.secondaryColor.oklch.c);
+    const avgHue = ((this.primaryColor.oklch.h || 0) + (this.secondaryColor.oklch.h || 0)) / 2;
 
-    // Define hue ranges for each type
+    // Define hue ranges for each type (OKLCH hues are the same as LCH — degrees 0–360)
     const hueRanges = {
-      alert: { min: 0, max: 30, target: 15 },    // Red
-      warning: { min: 60, max: 90, target: 75 },  // Yellow
-      success: { min: 100, max: 130, target: 115 }, // Green
-      info: { min: 240, max: 270, target: 255 }    // Blue
+      alert:   { min: 0,   max: 30,  target: 15  },  // Red
+      warning: { min: 60,  max: 90,  target: 75  },  // Yellow
+      success: { min: 100, max: 130, target: 115 },  // Green
+      info:    { min: 240, max: 270, target: 255 }   // Blue
     };
 
     // Update each indication color
     Object.entries(hueRanges).forEach(([type, range]) => {
-      // Calculate balanced hue within allowed range
       let balancedHue = range.target;
       if (avgHue >= range.min && avgHue <= range.max) {
         balancedHue = avgHue;
       }
 
-      this.indicationColors[type] = new Color('lch', [
+      this.indicationColors[type] = new Color('oklch', [
         avgLightness,
         maxChroma,
         balancedHue

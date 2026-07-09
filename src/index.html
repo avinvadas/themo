@@ -75,169 +75,162 @@
     </section>
 
     <section class="section">
-        <label id="main-input-label" class="heading-05">Type your primary color hex:</label>
-        <ul class="palette palette-brand">
-          <!-- Primary color -->
-          <li class="wrapper-primary-color excluded-from-color-theme"> 
-            <div class="button-copy" id="main-input-copy-to-cb">
-                <svg width='100%' height='100%' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                    <path d="M384 336l-192 0c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l140.1 0L400 115.9 400 320c0 8.8-7.2 16-16 16zM192 384l192 0c35.3 0 64-28.7 64-64l0-204.1c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1L192 0c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-32-48 0 0 32c0 8.8-7.2 16-16 16L64 464c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l32 0 0-48-32 0z"/>
-                </svg>
-            </div>
-            <input class="input-field-emphasized" id="color-input" type="text" maxlength="7" placeholder="#" title="Type Hex of primary color">
-        </li>
-        <!-- Secondary color -->
-        <li class="color-ticker" id="secondary-color">
-        </li>
-      </ul>
-      <div id="color-sample" style="display: none;"></div>
-      <!--Secondary hue harmony selector-->
-      <div id="ctrl-hues">
-        <div class="wrapper-color-picker">
-        <input class="color-thumb" id="color-picker-primary" type="color" value="#000000" title="pick primary color" />
-        <label  class="body-text-small">
-          Adjust primary color
-        </label>
-        </div>
-      <div  class='wrapper-seg-ctrl' >
-      
-        <label class="body-text-small">Set secondary hue:</label>
-        <div class="seg-ctrl">
-       <input type="radio" id="complementary" name="colorScheme" value="complementary" checked
-            aria-label="Make hue complementary">
-        <label for="complementary"  tabindex="0"  title="Make hue complementary" >
-          <div class='seg-ctrl-tab'>
-          <svg  viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-          <g transform="matrix(1,0,0,1,-2,-283)">
-              <g id="icon-complementary" transform="matrix(4.18667e-17,0.683735,-0.683735,4.18667e-17,236.05,281.274)">
-                  <rect x="2.525" y="283.831" width="58.481" height="58.481" style="fill:none;"/>
-                  <g transform="matrix(1.46255,0,0,1.46255,3.03649,-131.592)">
-                      <path fill="currentColor" d="M22.442,321.135C21.994,322.241 20.909,323.022 19.643,323.022C18.377,323.022 17.291,322.241 16.843,321.135C8.995,319.802 3.012,312.964 3.012,304.739C3.012,297.152 8.102,290.745 15.051,288.751C15.505,286.632 17.389,285.042 19.643,285.042C21.896,285.042 23.781,286.632 24.235,288.751C31.183,290.745 36.274,297.152 36.274,304.739C36.274,312.964 30.29,319.802 22.442,321.135ZM19.643,286.719C17.976,286.719 16.623,288.072 16.623,289.738C16.623,291.405 17.976,292.758 19.643,292.758C21.309,292.758 22.662,291.405 22.662,289.738C22.662,288.072 21.309,286.719 19.643,286.719ZM24.085,291.265C23.53,292.878 22.12,294.095 20.397,294.374L20.397,317.078C21.254,317.299 21.965,317.887 22.35,318.664C28.885,317.399 33.827,311.641 33.827,304.739C33.827,298.461 29.74,293.131 24.085,291.265ZM16.936,318.664C17.321,317.887 18.031,317.299 18.888,317.078L18.888,294.374C17.165,294.095 15.755,292.878 15.2,291.265C9.545,293.131 5.458,298.461 5.458,304.739C5.458,311.641 10.4,317.399 16.936,318.664Z"/>
-                  </g>
-              </g>
-          </g>
-      </svg>
-          </div>
-        </label>
-        
-        <input type="radio" id="triad" name="colorScheme" value='triad'
-            aria-label="Make hue triad">
-        <label for="triad"  tabindex="0"  title="Make hue triad">
-          <div class='seg-ctrl-tab'>
-          <svg viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-          <g transform="matrix(1,0,0,1,-67.2661,-283)">
-              <g id="icon-triad" transform="matrix(4.18667e-17,0.683735,-0.683735,4.18667e-17,301.316,281.274)">
-                  <rect x="2.525" y="283.831" width="58.481" height="58.481" style="fill:none;"/>
-                  <g transform="matrix(1,0,0,1,0,2.24169)">
-                      <g transform="matrix(1.46255,0,0,1.46255,3.03649,-132.626)">
-                          <path  fill="currentColor" d="M22.309,288.32C30.222,289.598 36.274,296.467 36.274,304.739C36.274,313.917 28.822,321.37 19.643,321.37C10.464,321.37 3.012,313.917 3.012,304.739C3.012,296.467 9.063,289.598 16.977,288.32C16.751,288.743 16.623,289.226 16.623,289.738C16.623,290.125 16.696,290.494 16.829,290.834C10.346,292.141 5.458,297.873 5.458,304.739C5.458,312.567 11.814,318.923 19.643,318.923C27.471,318.923 33.827,312.567 33.827,304.739C33.827,297.873 28.939,292.141 22.457,290.834C22.589,290.494 22.662,290.125 22.662,289.738C22.662,289.226 22.534,288.743 22.309,288.32Z" style="fill-opacity:0.3;"/>
-                      </g>
-                      <g transform="matrix(1.46255,0,0,1.46255,3.03649,-132.626)">
-                          <path  fill="currentColor"  d="M18.888,294.374C16.654,294.013 14.946,292.073 14.946,289.738C14.946,287.146 17.051,285.042 19.643,285.042C21.896,285.042 23.781,286.632 24.235,288.751C31.183,290.745 36.274,297.152 36.274,304.739C36.274,308.258 35.178,311.524 33.309,314.213C33.636,314.696 33.827,315.277 33.827,315.904C33.827,317.57 32.474,318.923 30.808,318.923C29.141,318.923 27.788,317.57 27.788,315.904C27.788,314.237 29.141,312.884 30.808,312.884C30.952,312.884 31.094,312.894 31.232,312.914C32.867,310.603 33.827,307.782 33.827,304.739C33.827,298.461 29.74,293.131 24.085,291.265C23.53,292.878 22.12,294.095 20.397,294.374L20.397,301.814C21.699,302.15 22.662,303.333 22.662,304.739C22.662,305.298 22.509,305.822 22.244,306.272L29.182,313.21L28.114,314.278L21.176,307.339C20.727,307.605 20.202,307.758 19.643,307.758C17.976,307.758 16.623,306.405 16.623,304.739C16.623,303.333 17.586,302.15 18.888,301.814L18.888,294.374ZM19.643,286.719C17.976,286.719 16.623,288.072 16.623,289.738C16.623,291.405 17.976,292.758 19.643,292.758C21.309,292.758 22.662,291.405 22.662,289.738C22.662,288.072 21.309,286.719 19.643,286.719Z"/>
-                      </g>
-                  </g>
-              </g>
-          </g>
-      </svg>
-        </div></label>
-          
-        <input type="radio" id="quad" name="colorScheme" value='quad' 
-            aria-label="Make hue quad">
-        <label for="quad"  tabindex="0" title="Make hue quad">
-         <div class='seg-ctrl-tab'> 
-        <svg viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"> 
-          <g transform="matrix(1,0,0,1,-112.071,-283)">
-              <g id="icon-quad" transform="matrix(4.18667e-17,0.683735,-0.683735,4.18667e-17,346.121,281.274)">
-                  <rect x="2.525" y="283.831" width="58.481" height="58.481" style="fill:none;"/>
-                  <g transform="matrix(1,0,0,1,-1.20795,2.24169)">
-                      <g transform="matrix(1.46255,0,0,1.46255,3.03649,-132.626)">
-                          <path  fill="currentColor" d="M22.309,288.32C30.222,289.598 36.274,296.467 36.274,304.739C36.274,313.917 28.822,321.37 19.643,321.37C10.464,321.37 3.012,313.917 3.012,304.739C3.012,296.467 9.063,289.598 16.977,288.32C16.751,288.743 16.623,289.226 16.623,289.738C16.623,290.125 16.696,290.494 16.829,290.834C10.346,292.141 5.458,297.873 5.458,304.739C5.458,312.567 11.814,318.923 19.643,318.923C27.471,318.923 33.827,312.567 33.827,304.739C33.827,297.873 28.939,292.141 22.457,290.834C22.589,290.494 22.662,290.125 22.662,289.738C22.662,289.226 22.534,288.743 22.309,288.32Z" style="fill-opacity:0.3;"/>
-                      </g>
-                      <g transform="matrix(1.46255,0,0,1.46255,3.03649,-132.626)">
-                          <path  fill="currentColor" d="M22.567,305.493C22.231,306.795 21.048,307.758 19.643,307.758C17.976,307.758 16.623,306.405 16.623,304.739C16.623,303.333 17.586,302.15 18.888,301.814L18.888,294.374C16.654,294.013 14.946,292.073 14.946,289.738C14.946,287.146 17.051,285.042 19.643,285.042C21.896,285.042 23.781,286.632 24.235,288.751C30.31,290.495 34.964,295.611 36.039,301.939C37.145,302.387 37.926,303.472 37.926,304.739C37.926,306.405 36.573,307.758 34.906,307.758C33.5,307.758 32.318,306.795 31.982,305.493L22.567,305.493ZM19.643,286.719C17.976,286.719 16.623,288.072 16.623,289.738C16.623,291.405 17.976,292.758 19.643,292.758C21.309,292.758 22.662,291.405 22.662,289.738C22.662,288.072 21.309,286.719 19.643,286.719ZM20.397,301.814C21.458,302.088 22.293,302.923 22.567,303.984L31.982,303.984C32.203,303.127 32.791,302.417 33.569,302.031C32.588,296.964 28.906,292.856 24.085,291.265C23.53,292.878 22.12,294.095 20.397,294.374L20.397,301.814Z"/>
-                      </g>
-                  </g>
-              </g>
-          </g>
-      </svg>
-          </div>
-        </label>
-      
-        <input type="radio" id="analogous" name="colorScheme" value="analogous"
-            aria-label="Make hue analogous">
-        <label for="analogous"  tabindex="0" title="Make hue analogous"><div class='seg-ctrl-tab'>
-          <svg fill="currentColor" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-          <g transform="matrix(1,0,0,1,-345.47,-283)">
-              <g id="icon-analogous" transform="matrix(4.18667e-17,0.683735,-0.683735,4.18667e-17,579.521,281.274)">
-                  <rect x="2.525" y="283.831" width="58.481" height="58.481" style="fill:none;"/>
-                  <g transform="matrix(1,0,0,1,5.68434e-14,2.24169)">
-                      <g transform="matrix(1.46255,0,0,1.46255,3.03649,-132.626)">
-                          <path d="M22.865,288.42C30.504,289.922 36.274,296.662 36.274,304.739C36.274,313.917 28.822,321.37 19.643,321.37C10.464,321.37 3.012,313.917 3.012,304.739C3.012,296.662 8.781,289.922 16.42,288.42C16.308,288.757 16.247,289.117 16.247,289.492C16.247,289.991 16.356,290.466 16.55,290.893C10.206,292.306 5.458,297.972 5.458,304.739C5.458,312.567 11.814,318.923 19.643,318.923C27.471,318.923 33.827,312.567 33.827,304.739C33.827,297.972 29.079,292.306 22.736,290.893C22.93,290.466 23.038,289.991 23.038,289.492C23.038,289.117 22.977,288.757 22.865,288.42Z" style="fill-opacity:0.3;"/>
-                      </g>
-                      <g transform="matrix(1.46255,0,0,1.46255,3.03649,-132.626)">
-                          <path d="M22.233,303.188C22.505,303.641 22.662,304.172 22.662,304.739C22.662,306.405 21.309,307.758 19.643,307.758C17.976,307.758 16.623,306.405 16.623,304.739C16.623,303.333 17.586,302.15 18.888,301.814L18.888,294.374C16.654,294.013 14.946,292.073 14.946,289.738C14.946,287.146 17.051,285.042 19.643,285.042C21.896,285.042 23.781,286.632 24.235,288.751C26.259,289.332 28.126,290.287 29.755,291.538C30.032,291.454 30.326,291.409 30.63,291.409C32.297,291.409 33.65,292.761 33.65,294.428C33.65,296.094 32.297,297.447 30.63,297.447C29.889,297.447 29.209,297.179 28.684,296.735L22.233,303.188ZM20.397,294.374L20.397,301.814C20.668,301.884 20.923,301.99 21.159,302.127L27.801,295.483C27.678,295.154 27.611,294.799 27.611,294.428C27.611,293.987 27.706,293.568 27.876,293.19C26.728,292.369 25.452,291.716 24.085,291.265C23.53,292.878 22.12,294.095 20.397,294.374L20.397,301.814ZM19.643,286.719C17.976,286.719 16.623,288.072 16.623,289.738C16.623,291.405 17.976,292.758 19.643,292.758C21.309,292.758 22.662,291.405 22.662,289.738C22.662,288.072 21.309,286.719 19.643,286.719Z"/>
-                      </g>
-                  </g>
-              </g>
-          </g>
-      </svg>
-          </div>
-        </label>
-      </div>
-      </div>
-      </div>
-        </section>
-        
-        <section class="section">
-        
-          <div class="sliders-column">
-            <div class="label-and-status">
-            <label class="body-text-small">Adjust secondary contrast (WCAG 2.2):</label> 
-            <span id="contrast-status" class="contrast-status body-text-small"></span>
-            </div>
-            <!-- Secondary Chroma adjust -->
-          <div class='color-adjust-input' title="adjust chroma of secondary color" id="input-sec-s">
-              <label for="chroma-slider"><div class='utility-icon'><svg  viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-          <g transform="matrix(1,0,0,1,-48.7972,-282.225)">
-              <g id="icon-chroma" transform="matrix(4.18667e-17,0.683735,-0.683735,4.18667e-17,282.848,280.499)">
-                  <rect x="2.525" y="283.831" width="58.481" height="58.481" style="fill:none;"/>
-                  <g transform="matrix(8.95556e-17,-1.46255,1.46255,8.95556e-17,-411.256,324.026)">
-                      <path fill="currentColor" d="M8.243,286.914C8.243,286.914 12.866,290.395 16.564,294.973C19.153,298.176 21.243,301.921 21.243,305.404C21.243,312.994 15.081,319.156 7.49,319.156C-0.1,319.156 -6.262,312.994 -6.262,305.404C-6.262,301.921 -4.172,298.176 -1.583,294.973C2.115,290.395 6.738,286.914 6.738,286.914C7.184,286.578 7.797,286.578 8.243,286.914ZM7.49,289.505C6.088,290.641 2.98,293.303 0.361,296.544C-1.851,299.282 -3.762,302.426 -3.762,305.404C-3.762,311.614 1.28,316.656 7.49,316.656C13.701,316.656 18.743,311.614 18.743,305.404C18.743,302.426 16.832,299.282 14.62,296.544C12.001,293.303 8.893,290.641 7.49,289.505ZM0.017,305.769L14.964,305.769C14.964,309.897 11.618,313.243 7.49,313.243C3.363,313.243 0.017,309.897 0.017,305.769Z"/>
-                  </g>
-              </g>
-          </g>
-      </svg></div></label>
-              <input class="slider-input" type="range" id="chroma-slider" min="0" max="132" value="100"
-                  aria-label="Adjust chroma">
-              <input class="number-input" type="number" id="chroma-input" min="0" max="132" value="100"
-                  aria-label="Chroma value"
-                  title="Enter chroma value">
-          </div>
-          <!-- Secondary Lightness adjust -->
-          <div class='color-adjust-input' title="adjust lightness of secondary color" id="input_sec_l">
-              <label for="lightness-slider">
-                <div class='utility-icon'>
-                <svg width="100%" height="100%" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-          <g transform="matrix(1,0,0,1,0,-282.225)">
-              <g id="icon-lightness" transform="matrix(4.18667e-17,0.683735,-0.683735,4.18667e-17,234.05,280.499)">
-                  <rect x="2.525" y="283.831" width="58.481" height="58.481" style="fill:none;"/>
-                  <g transform="matrix(8.95556e-17,-1.46255,1.46255,8.95556e-17,-414.299,342.426)">
-                      <path fill='currentColor' d="M20.071,297.428C24.245,297.428 27.633,300.816 27.633,304.99C27.633,309.164 24.245,312.552 20.071,312.552C15.898,312.552 12.509,309.164 12.509,304.99C12.509,300.816 15.898,297.428 20.071,297.428ZM10.183,304.99C10.183,305.632 9.662,306.153 9.02,306.153L5.361,306.153C4.719,306.153 4.198,305.632 4.198,304.99C4.198,304.348 4.719,303.827 5.361,303.827L9.02,303.827C9.662,303.827 10.183,304.348 10.183,304.99ZM35.945,304.99C35.945,305.632 35.423,306.153 34.782,306.153L31.122,306.153C30.481,306.153 29.959,305.632 29.959,304.99C29.959,304.348 30.481,303.827 31.122,303.827L34.782,303.827C35.423,303.827 35.945,304.348 35.945,304.99ZM20.071,295.102C19.429,295.102 18.908,294.581 18.908,293.939L18.908,290.28C18.908,289.638 19.429,289.117 20.071,289.117C20.713,289.117 21.234,289.638 21.234,290.28L21.234,293.939C21.234,294.581 20.713,295.102 20.071,295.102ZM20.071,320.863C19.429,320.863 18.908,320.342 18.908,319.7L18.908,316.041C18.908,315.399 19.429,314.878 20.071,314.878C20.713,314.878 21.234,315.399 21.234,316.041L21.234,319.7C21.234,320.342 20.713,320.863 20.071,320.863ZM13.079,297.998C12.625,298.452 11.888,298.452 11.434,297.998L8.847,295.411C8.393,294.957 8.393,294.22 8.847,293.766C9.301,293.312 10.038,293.312 10.492,293.766L13.079,296.353C13.533,296.807 13.533,297.544 13.079,297.998ZM31.295,316.214C30.841,316.668 30.104,316.668 29.651,316.214L27.063,313.627C26.609,313.173 26.609,312.436 27.063,311.982C27.517,311.528 28.254,311.528 28.708,311.982L31.295,314.569C31.749,315.023 31.749,315.76 31.295,316.214ZM27.063,297.998C26.609,297.544 26.609,296.807 27.063,296.353L29.651,293.766C30.104,293.312 30.841,293.312 31.295,293.766C31.749,294.22 31.749,294.957 31.295,295.411L28.708,297.998C28.254,298.452 27.517,298.452 27.063,297.998ZM8.847,316.214C8.393,315.76 8.393,315.023 8.847,314.569L11.434,311.982C11.888,311.528 12.625,311.528 13.079,311.982C13.533,312.436 13.533,313.173 13.079,313.627L10.492,316.214C10.038,316.668 9.301,316.668 8.847,316.214Z"/>
-                  </g>
-              </g>
-          </g>
-      </svg>
-      </div>
-              </label>
-              <input class="slider-input" type="range" id="lightness-slider" min="0" max="100" value="50"
-                  aria-label="Adjust lightness">
-              <input class="number-input" type="number" id="lightness-input" min="0" max="100" step="1"
-                  aria-label="Lightness value"
-                  title="Enter lightness value"> 
-            </div>
-          </div>
-          <button class="copy-json-button" id="generate-shareable-url-button" >Copy theme URL</button>
 
+      <!-- Row 1: label left | seg control center | copy button right -->
+      <div class="section-topbar">
+        <label id="main-input-label" class="heading-05">Type your primary color hex:</label>
+        <!-- Hidden checkbox keeps existing JS working unchanged -->
+        <input type="checkbox" id="tertiary-checkbox" aria-hidden="true" style="display:none">
+        <div class="swatch-count-seg" role="group" aria-label="Number of hero swatches">
+          <button class="swatch-count-btn active" data-value="2" aria-pressed="true" title="Two swatches">
+            <svg viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="10" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+              <rect x="13" y="1" width="10" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+            </svg>
+          </button>
+          <button class="swatch-count-btn" data-value="3" aria-pressed="false" title="Three swatches">
+            <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="8.67" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+              <rect x="11.67" y="1" width="8.67" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+              <rect x="22.33" y="1" width="8.67" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+            </svg>
+          </button>
+        </div>
+        <div class="section-topbar-actions">
+          <button class="copy-json-button" id="generate-shareable-url-button">Copy theme URL</button>
+        </div>
+      </div>
+
+      <!-- These are moved into the primary swatch by JS (rootGroup.embeddedInput/Copy) -->
+      <input class="input-field-emphasized" id="color-input" type="text" maxlength="7" placeholder="#" title="Type Hex of primary color" style="display:none">
+      <div class="button-copy" id="main-input-copy-to-cb" style="display:none">
+          <svg width='100%' height='100%' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+              <path d="M384 336l-192 0c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l140.1 0L400 115.9 400 320c0 8.8-7.2 16-16 16zM192 384l192 0c35.3 0 64-28.7 64-64l0-204.1c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1L192 0c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-32-48 0 0 32c0 8.8-7.2 16-16 16L64 464c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l32 0 0-48-32 0z"/>
+          </svg>
+      </div>
+
+      <!-- Row 2: swatches -->
+      <div id="root-color-group"></div>
+      <div id="color-sample" style="display: none;"></div>
+
+      <!-- Row 3: controls pinned to swatches bottom (0.5rem gap via CSS) -->
+      <div id="ctrl-hues">
+        <div class="ctrl-hues-columns">
+
+          <!-- Left column: aligns under primary swatch -->
+          <div class="ctrl-primary">
+            <div class="wrapper-color-picker">
+              <label class="body-text-small">Adjust primary color</label>
+              <input class="color-thumb" id="color-picker-primary" type="color" value="#000000" title="Pick primary color" />
+            </div>
+          </div>
+
+          <!-- Right column: aligns under secondary swatch -->
+          <div class="ctrl-secondary">
+            <div class="secondary-color-ctrl">
+              <span class="body-text-small ctrl-group-label">Secondary color:</span>
+              <div class="secondary-ctrl-row" id="secondary-ctrl-row">
+
+                <!-- Lightness: sun icon inside input, popover slider -->
+                <div class="slider-popover-ctrl">
+                  <label class="ctrl-item-label body-text-small" for="lightness-input" title="Lightness" aria-label="Lightness">L</label>
+                  <div class="ctrl-input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                        <circle cx="8" cy="8" r="3"/>
+                        <line x1="8" y1="1" x2="8" y2="2.5"/>
+                        <line x1="8" y1="13.5" x2="8" y2="15"/>
+                        <line x1="1" y1="8" x2="2.5" y2="8"/>
+                        <line x1="13.5" y1="8" x2="15" y2="8"/>
+                        <line x1="3.1" y1="3.1" x2="4.2" y2="4.2"/>
+                        <line x1="11.8" y1="11.8" x2="12.9" y2="12.9"/>
+                        <line x1="12.9" y1="3.1" x2="11.8" y2="4.2"/>
+                        <line x1="4.2" y1="11.8" x2="3.1" y2="12.9"/>
+                      </svg>
+                    </span>
+                    <input class="number-input ctrl-value-input" type="text" id="lightness-input"
+                      value="71%" aria-label="Lightness (0%–100%)">
+                    <div class="slider-popover">
+                      <input class="slider-input" type="range" id="lightness-slider" min="0" max="100" value="50">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chroma: drop icon inside input, popover slider -->
+                <div class="slider-popover-ctrl">
+                  <label class="ctrl-item-label body-text-small" for="chroma-input" title="Chroma" aria-label="Chroma">C</label>
+                  <div class="ctrl-input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 1.5 C8 1.5 3.5 7.5 3.5 10.5 A4.5 4.5 0 0 0 12.5 10.5 C12.5 7.5 8 1.5 8 1.5Z"/>
+                      </svg>
+                    </span>
+                    <input class="number-input ctrl-value-input" type="text" id="chroma-input"
+                      value="0.96" aria-label="Chroma (0.00–1.00)">
+                    <div class="slider-popover">
+                      <input class="slider-input" type="range" id="chroma-slider" min="0" max="100" value="100">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hue offset: custom dropdown with color previews, dot inside field -->
+                <div class="wrapper-hue-select slider-popover-ctrl">
+                  <label class="ctrl-item-label body-text-small" title="Hue offset" aria-label="Hue offset">H</label>
+                  <div class="hue-select-row">
+                    <!-- Custom dropdown replaces native <select> -->
+                    <div class="hue-custom-select" id="hue-custom-select" role="combobox" tabindex="0"
+                         aria-haspopup="listbox" aria-expanded="false" aria-label="Hue offset">
+                      <!-- Offset icon showing the currently selected angle -->
+                      <span class="hue-trigger-icon" id="hue-trigger-icon" aria-hidden="true"></span>
+                      <!-- Always-visible scrub/type input -->
+                      <input type="number" id="hue-scrub-input" class="hue-scrub-input"
+                        min="10" max="360" value="180"
+                        aria-label="Hue offset in degrees — drag to scrub">
+                      <!-- Chevron toggles the preset panel -->
+                      <button type="button" id="hue-chevron-btn" class="hue-chevron-btn" tabindex="-1" aria-label="Toggle hue options">
+                        <svg class="hue-select-arrow" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                          <polyline points="1,1 5,5 9,1"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="hue-options-panel" id="hue-options-panel" role="listbox" hidden>
+                      <div class="hue-option" role="option" data-value="30">30°</div>
+                      <div class="hue-option" role="option" data-value="60">60°</div>
+                      <div class="hue-option" role="option" data-value="90">90°</div>
+                      <div class="hue-option" role="option" data-value="120">120°</div>
+                      <div class="hue-option" role="option" data-value="150">150°</div>
+                      <div class="hue-option" role="option" data-value="180">180°</div>
+                      <div class="hue-option" role="option" data-value="210">210°</div>
+                      <div class="hue-option" role="option" data-value="240">240°</div>
+                      <div class="hue-option" role="option" data-value="270">270°</div>
+                      <div class="hue-option" role="option" data-value="300">300°</div>
+                      <div class="hue-option" role="option" data-value="330">330°</div>
+                    </div>
+                    <!-- Hidden native select kept for value/event compatibility -->
+                    <select id="hue-select" aria-hidden="true" tabindex="-1" style="display:none">
+                      <option value="30">30°</option>
+                      <option value="60">60°</option>
+                      <option value="90">90°</option>
+                      <option value="120">120°</option>
+                      <option value="150">150°</option>
+                      <option value="180" selected>180°</option>
+                      <option value="210">210°</option>
+                      <option value="240">240°</option>
+                      <option value="270">270°</option>
+                      <option value="300">300°</option>
+                      <option value="330">330°</option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.ctrl-hues-columns -->
+
+      </div>
+      </div>
         </section>
         <section class="palettes-section">
             

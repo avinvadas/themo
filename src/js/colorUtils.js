@@ -14,9 +14,9 @@ export { Color };
  * Core color conversion and basic manipulation functions
  */
 
-// Convert LCH to Hex
+// Convert OKLCH to Hex
 export function lchToHex(l, c, h) {
-    const color = new Color('lch', [l, c, h]);
+    const color = new Color('oklch', [l, c, h]);
     return color.to('srgb').toString({format: 'hex'});
 }
 
@@ -37,10 +37,10 @@ export function setValue(value, factor) {
  * Handles color relationships and harmony calculations
  */
 
-// Set one color relative to a source color (LCH format)
+// Set one color relative to a source color (OKLCH format)
 export function relateColor(srcColor, l, c, h) {
     try {
-        const result = new Color('lch', [l, c, h]);
+        const result = new Color('oklch', [l, c, h]);
         return result;
     } catch (error) {
         return srcColor; // Return the source color if conversion fails
@@ -48,10 +48,10 @@ export function relateColor(srcColor, l, c, h) {
 }
 
 export function createHarmoniousColor(baseHue, primaryColor, secondaryColor) {
-    const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
-    const avgChroma = (primaryColor.lch.c + secondaryColor.lch.c) / 2;
-    const adjustedHue = adjustHueToHarmonize(baseHue, primaryColor.lch.h, secondaryColor.lch.h);
-    return new Color('lch', [avgLightness, avgChroma, adjustedHue]);
+    const avgLightness = (primaryColor.oklch.l + secondaryColor.oklch.l) / 2;
+    const avgChroma = (primaryColor.oklch.c + secondaryColor.oklch.c) / 2;
+    const adjustedHue = adjustHueToHarmonize(baseHue, primaryColor.oklch.h || 0, secondaryColor.oklch.h || 0);
+    return new Color('oklch', [avgLightness, avgChroma, adjustedHue]);
 }
 
 // adjust hue for harmony
@@ -75,28 +75,29 @@ export function adjustHueToHarmonize(baseHue, primaryHue, secondaryHue) {
 
 // Generate color scale set (for color palettes)
 export function generateColorScale(sourceColor, config) {
-    const { steps, startPoint, endPoint, interpolation, includeSource, isNeutral, neutralChroma, lightnessEase, chromaEase, huePath } = config;
+    const { steps, startPoint, endPoint, interpolation, includeSource, isNeutral, neutralChroma, lightnessEase, chromaEase, huePath, bezierCP } = config;
     const scaleArray = [];
+    const bezierOpts = bezierCP ? { bezierCP } : {};
 
     for (let i = 0; i < steps; i++) {
         let t = i / (steps - 1);
-        
-        let l = interpolate(startPoint.l, endPoint.l, t, lightnessEase || interpolation);
+
+        let l = interpolate(startPoint.l, endPoint.l, t, lightnessEase || interpolation, bezierOpts);
         let c, h;
 
         if (isNeutral) {
             // For neutral palette, use neutralChroma (which can be 0 or the small value set by the user)
             c = neutralChroma;
-            h = sourceColor.lch.h; // Keep the hue constant for neutral palette
+            h = sourceColor.oklch.h || 0; // Keep the hue constant for neutral palette
         } else {
             if (chromaEase === 'constant') {
-                c = sourceColor.lch.c;
+                c = sourceColor.oklch.c;
             } else {
                 c = interpolate(startPoint.c, endPoint.c, t, chromaEase || interpolation);
             }
 
             if (huePath === 'constant') {
-                h = sourceColor.lch.h;
+                h = sourceColor.oklch.h || 0;
             } else if (huePath === 'shorter') {
                 h = interpolateHue(startPoint.h, endPoint.h, t, interpolation);
             } else {
@@ -104,24 +105,24 @@ export function generateColorScale(sourceColor, config) {
             }
         }
 
-        let interpolatedColor = new Color("lch", [l, c, h]);
+        let interpolatedColor = new Color("oklch", [l, c, h]);
         scaleArray.push(mapToGamut(interpolatedColor));
     }
 
     if (includeSource && !isNeutral) {
-        const sourceIndex = Math.round((steps - 1) * (sourceColor.lch.l - startPoint.l) / (endPoint.l - startPoint.l));
+        const sourceIndex = Math.round((steps - 1) * (sourceColor.oklch.l - startPoint.l) / (endPoint.l - startPoint.l));
         scaleArray[sourceIndex] = sourceColor;
     }
 
     return scaleArray;
 }
 
-// Generate random LCH color
+// Generate random OKLCH color
 export function generateRandomLCH() {
-    return new Color('lch', [
-        50,  // L: 0-100
-        80,  // C: 0-132 (approximate max for sRGB)
-        Math.random() * 360   // H: 0-360
+    return new Color('oklch', [
+        0.5,   // L: 0–1
+        0.2,   // C: 0–0.4 (mid-range for sRGB)
+        Math.random() * 360  // H: 0–360
     ]);
 }
 
@@ -133,8 +134,8 @@ export function generateRandomLCH() {
 // Interpolate functions by methods:
 export function interpolate(start, end, t, method = 'linear', options = {}) {
     const { amplitude = 1, period = 0.3 } = options;
-    const isReverse = method.startsWith('reverse');
-    const baseMethod = isReverse ? method.slice(7) : method;
+    const isReverse = method.startsWith('reverse-');
+    const baseMethod = isReverse ? method.slice(8) : method;
     
     if (isReverse) {
         t = 1 - t;
@@ -173,6 +174,14 @@ export function interpolate(start, end, t, method = 'linear', options = {}) {
         case 'cosineWave':
             result = start + (end - start) * cosineWave(t);
             break;
+        case 'bezier': {
+            // Simplified bezier: use t as curve parameter directly (not CSS timing fn)
+            const [, by1,, by2] = options.bezierCP || [0.33, 0.33, 0.67, 0.67];
+            const bt = 1 - t;
+            const bezierT = 3 * bt * bt * t * by1 + 3 * bt * t * t * by2 + t * t * t;
+            result = start + (end - start) * bezierT;
+            break;
+        }
         default:
             throw new Error(`Unsupported interpolation method: ${method}`);
     }
@@ -238,21 +247,22 @@ export function cosineWave(t) {
 
 export function mapToGamut(color) {
     const srgb = color.to('srgb');
-    
+
     // Check if the color is already in gamut
     if (isInSRGBGamut(srgb)) {
         return srgb;
     }
 
-    let lch = color.to('lch');
+    let oklch = color.to('oklch');
     let lower = 0;
-    let upper = lch.c;
+    let upper = oklch.c;
     let mid;
 
-    // Binary search for the highest in-gamut chroma
-    while (upper - lower > 0.1) {
+    // Binary search for the highest in-gamut chroma.
+    // OKLCH chroma is 0–0.4, so 0.001 gives sufficient precision.
+    while (upper - lower > 0.001) {
         mid = (lower + upper) / 2;
-        const testColor = new Color('lch', [lch.l, mid, lch.h]);
+        const testColor = new Color('oklch', [oklch.l, mid, oklch.h || 0]);
         if (isInSRGBGamut(testColor.to('srgb'))) {
             lower = mid;
         } else {
@@ -260,8 +270,8 @@ export function mapToGamut(color) {
         }
     }
 
-    // Create the new color with the highest possible chroma
-    return new Color('lch', [lch.l, lower, lch.h]).to('srgb');
+    // Return the highest in-gamut chroma colour
+    return new Color('oklch', [oklch.l, lower, oklch.h || 0]).to('srgb');
 }
 
 export function isInSRGBGamut(srgb) {
@@ -271,15 +281,15 @@ export function isInSRGBGamut(srgb) {
 
 // Add a new function to preserve chroma as much as possible
 export function preserveChroma(color) {
-    const original = color.to('lch');
+    const original = color.to('oklch');
     const mapped = mapToGamut(color);
-    const mappedLCH = mapped.to('lch');
+    const mappedOKLCH = mapped.to('oklch');
 
     // If the mapped color has significantly less chroma, try to preserve it
-    if (mappedLCH.c < original.c * 0.9) {
-        // Try to preserve chroma by adjusting lightness
-        for (let l = original.l; l >= 0 && l <= 100; l += (l < original.l ? -1 : 1)) {
-            const adjusted = new Color('lch', [l, original.c, original.h]);
+    if (mappedOKLCH.c < original.c * 0.9) {
+        // Try to preserve chroma by stepping lightness in small OKLCH increments
+        for (let l = original.l; l >= 0 && l <= 1; l += (l < original.l ? -0.01 : 0.01)) {
+            const adjusted = new Color('oklch', [l, original.c, original.h || 0]);
             if (isInSRGBGamut(adjusted.to('srgb'))) {
                 return adjusted.to('srgb');
             }
@@ -389,7 +399,7 @@ export function interpolateColor(start, end, t, method) {
             throw new Error(`Unsupported interpolation method: ${method}`);
     }
 
-    return new Color("lch", [l, c, h]);
+    return new Color("oklch", [l, c, h]);
 }
 
 // Convert RGB to hex

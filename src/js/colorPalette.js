@@ -97,8 +97,8 @@ class BaseColorRow {
 
         if (!this.sourceColor || !this.sourceColor.equals(sourceColor)) {
             this.sourceColor = sourceColor;
-            this.config.startPoint = { ...this.config.startPoint, h: sourceColor.lch.h };
-            this.config.endPoint = { ...this.config.endPoint, h: sourceColor.lch.h };
+            this.config.startPoint = { ...this.config.startPoint, h: sourceColor.oklch.h || 0 };
+            this.config.endPoint   = { ...this.config.endPoint,   h: sourceColor.oklch.h || 0 };
             this.generateColors();
             this.calculateContrastInfo();
             this.updateSwatches();
@@ -142,8 +142,8 @@ class BaseColorRow {
         try {
             this.scale = colorUtils.generateColorScale(this.sourceColor, {
                 steps,
-                startPoint: { l: startPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.lch.c, h: this.sourceColor.lch.h },
-                endPoint: { l: endPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.lch.c, h: this.sourceColor.lch.h },
+                startPoint: { l: startPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.oklch.c, h: this.sourceColor.oklch.h },
+                endPoint: { l: endPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.oklch.c, h: this.sourceColor.oklch.h },
                 interpolation,
                 includeSource,
                 isNeutral,
@@ -226,15 +226,15 @@ class BaseColorRow {
             contrastRatio.className = 'contrast-ratio';
             contrastRatio.textContent = this.contrastRatios[index].toFixed(2);
             // Set text color based on background lightness
-            const lightness = color.lch.l;
-            contrastRatio.style.color = lightness > 50 ? 'black' : 'white';
+            const lightness = color.oklch.l;
+            contrastRatio.style.color = lightness > 0.5 ? 'black' : 'white';
             hexValueContainer.appendChild(contrastRatio);
 
             const hexValue = document.createElement('span');
             hexValue.className = 'hex-value';
             hexValue.textContent = color.to('srgb').toString({ format: 'hex' });
             // Set text color based on background lightness
-            hexValue.style.color = lightness > 50 ? 'black' : 'white';
+            hexValue.style.color = lightness > 0.5 ? 'black' : 'white';
             hexValueContainer.appendChild(hexValue);
 
             swatch.appendChild(hexValueContainer);
@@ -247,18 +247,18 @@ class BaseColorRow {
                 contrastMarker.className = 'swatch__Marker';
                 contrastMarker.textContent = this.contrastMarkers[index];
                 contrastMarker.setAttribute('data-level', this.contrastMarkers[index]);
-                contrastMarker.style.color = lightness > 50 ? 'black' : 'white';
+                contrastMarker.style.color = lightness > 0.5 ? 'black' : 'white';
                 contrastMarkerContainer.appendChild(contrastMarker);
                 swatch.appendChild(contrastMarkerContainer);
             }
 
             // Add hover-click interactions with embedded SVGs
             const copyIcon = uiManager.createCopyIcon();
-            copyIcon.style.color = lightness > 50 ? 'black' : 'white';
+            copyIcon.style.color = lightness > 0.5 ? 'black' : 'white';
             swatch.appendChild(copyIcon);
 
             const checkIcon = uiManager.createCheckIcon();
-            checkIcon.style.color = lightness > 50 ? 'black' : 'white';
+            checkIcon.style.color = lightness > 0.5 ? 'black' : 'white';
             checkIcon.style.position = 'absolute';
             checkIcon.style.top = '50%';
             checkIcon.style.left = '50%';
@@ -344,12 +344,12 @@ export class ScalesRow extends BaseColorRow {
     constructor(sourceColor, config = {}) {
         super({
             steps: 7,
-            startPoint: { l: 2, c: 0, h: sourceColor ? sourceColor.lch.h : 0 },
-            endPoint: { l: 95, c: 0, h: sourceColor ? sourceColor.lch.h : 0 },
+            startPoint: { l: 0.02, c: 0, h: sourceColor ? (sourceColor.oklch.h || 0) : 0 },
+            endPoint:   { l: 0.95, c: 0, h: sourceColor ? (sourceColor.oklch.h || 0) : 0 },
             interpolation: 'linear',
             includeSource: true,
             isNeutral: false,
-            neutralChroma: 5,
+            neutralChroma: 0.05,
             ...config,
         });
 
@@ -402,8 +402,8 @@ export class ScalesRow extends BaseColorRow {
         }, 0);
     
         // Update start and end points with the correct hue
-        this.config.startPoint.h = this.sourceColor.lch.h;
-        this.config.endPoint.h = this.sourceColor.lch.h;
+        this.config.startPoint.h = this.sourceColor.oklch.h;
+        this.config.endPoint.h = this.sourceColor.oklch.h;
     
         // Regenerate the scale and refresh swatches
         this.generateScale();
@@ -417,8 +417,8 @@ export class ScalesRow extends BaseColorRow {
         try {
             this.scale = colorUtils.generateColorScale(this.sourceColor, {
                 steps,
-                startPoint: { l: startPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.lch.c, h: this.sourceColor.lch.h },
-                endPoint: { l: endPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.lch.c, h: this.sourceColor.lch.h },
+                startPoint: { l: startPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.oklch.c, h: this.sourceColor.oklch.h },
+                endPoint: { l: endPoint.l, c: isNeutral ? neutralChroma : this.sourceColor.oklch.c, h: this.sourceColor.oklch.h },
                 interpolation,
                 includeSource,
                 isNeutral,
@@ -465,12 +465,12 @@ export class ScalesRow extends BaseColorRow {
     static create(sourceColor, config = {}, label = 'Scale Row') {
         if (!sourceColor) {
            /* console.warn('ScalesRow.create: sourceColor is undefined or null'); */
-            sourceColor = new colorUtils.Color('lch', [50, 1, 0]); // Default color with non-zero chroma
+            sourceColor = new colorUtils.Color('oklch', [0.5, 0.01, 0]); // Default color with non-zero chroma
         }
 
-        if (sourceColor.lch.c === 0) {
+        if (sourceColor.oklch.c === 0) {
             /* console.warn('Source color has zero chroma, adjusting'); */
-            sourceColor = new colorUtils.Color('lch', [sourceColor.lch.l, 1, sourceColor.lch.h]);
+            sourceColor = new colorUtils.Color('oklch', [sourceColor.oklch.l, 0.01, sourceColor.oklch.h || 0]);
         }
 
         const row = new ScalesRow(sourceColor, config);
@@ -518,15 +518,15 @@ export class ScalesRow extends BaseColorRow {
                 contrastRatio.textContent = 'N/A';
             }
             // Set text color based on background lightness
-            const lightness = color.lch.l;
-            contrastRatio.style.color = lightness > 50 ? 'black' : 'white';
+            const lightness = color.oklch.l;
+            contrastRatio.style.color = lightness > 0.5 ? 'black' : 'white';
             hexValueContainer.appendChild(contrastRatio);
     
             const hexValue = document.createElement('span');
             hexValue.className = 'hex-value';
             hexValue.textContent = color.to('srgb').toString({ format: 'hex' });
             // Set text color based on background lightness
-            hexValue.style.color = lightness > 50 ? 'black' : 'white';
+            hexValue.style.color = lightness > 0.5 ? 'black' : 'white';
             hexValueContainer.appendChild(hexValue);
     
             swatch.appendChild(hexValueContainer);
@@ -539,18 +539,18 @@ export class ScalesRow extends BaseColorRow {
                 contrastMarker.className = 'swatch__Marker';
                 contrastMarker.textContent = this.contrastMarkers[index];
                 contrastMarker.setAttribute('data-level', this.contrastMarkers[index]);
-                contrastMarker.style.color = lightness > 50 ? 'black' : 'white';
+                contrastMarker.style.color = lightness > 0.5 ? 'black' : 'white';
                 contrastMarkerContainer.appendChild(contrastMarker);
                 swatch.appendChild(contrastMarkerContainer);
             }
     
             // Add hover-click interactions with embedded SVGs
             const copyIcon = uiManager.createCopyIcon();
-            copyIcon.style.color = lightness > 50 ? 'black' : 'white';
+            copyIcon.style.color = lightness > 0.5 ? 'black' : 'white';
             swatch.appendChild(copyIcon);
     
             const checkIcon = uiManager.createCheckIcon();
-            checkIcon.style.color = lightness > 50 ? 'black' : 'white';
+            checkIcon.style.color = lightness > 0.5 ? 'black' : 'white';
             checkIcon.style.position = 'absolute';
             checkIcon.style.top = '50%';
             checkIcon.style.left = '50%';
@@ -593,22 +593,22 @@ export class ScalesRow extends BaseColorRow {
         let baseColor;
         switch (type) {
             case 'alert':
-                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 0]); // Red
+                baseColor = new colorUtils.Color('oklch', [color.oklch.l, color.oklch.c, 0]); // Red
                 break;
             case 'warning':
-                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 45]); // Yellow
+                baseColor = new colorUtils.Color('oklch', [color.oklch.l, color.oklch.c, 45]); // Yellow
                 break;
             case 'success':
-                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 120]); // Green
+                baseColor = new colorUtils.Color('oklch', [color.oklch.l, color.oklch.c, 120]); // Green
                 break;
             case 'info':
-                baseColor = new colorUtils.Color('lch', [color.lch.l, color.lch.c, 210]); // Blue
+                baseColor = new colorUtils.Color('oklch', [color.oklch.l, color.oklch.c, 210]); // Blue
                 break;
         }
 
         // Set start and end points using the baseColor
-        config.startPoint = { l: baseColor.lch.l - 20, c: baseColor.lch.c, h: baseColor.lch.h };
-        config.endPoint = { l: baseColor.lch.l + 20, c: baseColor.lch.c, h: baseColor.lch.h };
+        config.startPoint = { l: baseColor.oklch.l - 20, c: baseColor.oklch.c, h: baseColor.oklch.h };
+        config.endPoint = { l: baseColor.oklch.l + 20, c: baseColor.oklch.c, h: baseColor.oklch.h };
         
         const row = new ScalesRow(baseColor, config);
         row.createSwatches('indication-scale', `${type.charAt(0).toUpperCase() + type.slice(1)}`);
@@ -672,8 +672,8 @@ export class HarmonicColorRow extends BaseColorRow {
         const toHex = (color) => color.to('srgb').toString({ format: 'hex' });
 
         // Calculate hue difference
-        let hue1 = this.primaryColor.lch.h;
-        let hue2 = this.secondaryColor.lch.h;
+        let hue1 = this.primaryColor.oklch.h;
+        let hue2 = this.secondaryColor.oklch.h;
         let hueDiff = (hue2 - hue1 + 360) % 360;
 
         if (huePath === 'full-circle') {
@@ -681,10 +681,10 @@ export class HarmonicColorRow extends BaseColorRow {
             for (let i = 0; i < steps; i++) {
                 let h = (360 * i / steps + hue1) % 360;
                 let t = i / (steps - 1);
-                let l = colorUtils.interpolate(this.primaryColor.lch.l, this.secondaryColor.lch.l, t, lightnessEase);
-                let c = colorUtils.interpolate(this.primaryColor.lch.c, this.secondaryColor.lch.c, t, chromaEase);
+                let l = colorUtils.interpolate(this.primaryColor.oklch.l, this.secondaryColor.oklch.l, t, lightnessEase);
+                let c = colorUtils.interpolate(this.primaryColor.oklch.c, this.secondaryColor.oklch.c, t, chromaEase);
 
-                this.colors[i] = new colorUtils.Color("lch", [l, c, h]); // Store color objects instead of hex for later conversion
+                this.colors[i] = new colorUtils.Color("oklch", [l, c, h]); // Store color objects instead of hex for later conversion
             }
 
             // Ensure primary and secondary colors are included
@@ -711,10 +711,10 @@ export class HarmonicColorRow extends BaseColorRow {
             for (let i = 1; i < steps - 1; i++) {
                 let t = i / (steps - 1);
                 let h = (hue1 + selectedPath * t + 360) % 360;
-                let l = colorUtils.interpolate(this.primaryColor.lch.l, this.secondaryColor.lch.l, t, lightnessEase);
-                let c = colorUtils.interpolate(this.primaryColor.lch.c, this.secondaryColor.lch.c, t, chromaEase);
+                let l = colorUtils.interpolate(this.primaryColor.oklch.l, this.secondaryColor.oklch.l, t, lightnessEase);
+                let c = colorUtils.interpolate(this.primaryColor.oklch.c, this.secondaryColor.oklch.c, t, chromaEase);
 
-                this.colors[i] = new colorUtils.Color("lch", [l, c, h]); // Store color objects instead of hex for consistency
+                this.colors[i] = new colorUtils.Color("oklch", [l, c, h]); // Store color objects instead of hex for consistency
             }
         }
     }
@@ -893,10 +893,10 @@ export class GeneralColorRow extends BaseColorRow {
 
             for (let j = 1; j <= currentSegmentSteps; j++) {
                 const t = j / (currentSegmentSteps + 1);
-                const l = colorUtils.interpolate(startColor.lch.l, endColor.lch.l, t, interpolation);
-                const c = colorUtils.interpolate(startColor.lch.c, endColor.lch.c, t, interpolation);
-                const h = colorUtils.interpolate(startColor.lch.h, endColor.lch.h, t, interpolation);
-                const interpolatedColor = new colorUtils.Color('lch', [l, c, h]);
+                const l = colorUtils.interpolate(startColor.oklch.l, endColor.oklch.l, t, interpolation);
+                const c = colorUtils.interpolate(startColor.oklch.c, endColor.oklch.c, t, interpolation);
+                const h = colorUtils.interpolate(startColor.oklch.h, endColor.oklch.h, t, interpolation);
+                const interpolatedColor = new colorUtils.Color('oklch', [l, c, h]);
                 colors.push(interpolatedColor);
             }
 
@@ -1035,9 +1035,9 @@ export class IndicationRow extends ScalesRow {
         };
 
         // Create base color with fixed hue but keep input l,c
-        const baseColor = new colorUtils.Color('lch', [
-            color.lch.l,
-            color.lch.c,
+        const baseColor = new colorUtils.Color('oklch', [
+            color.oklch.l,
+            color.oklch.c,
             hueMap[type]
         ]);
 
@@ -1046,15 +1046,15 @@ export class IndicationRow extends ScalesRow {
             steps: 3,
             interpolation: 'linear',
             includeSource: true,
-            startPoint: { 
-                l: baseColor.lch.l - 20, 
-                c: baseColor.lch.c, 
-                h: hueMap[type] 
+            startPoint: {
+                l: Math.max(baseColor.oklch.l - 0.2, 0.05),
+                c: baseColor.oklch.c,
+                h: hueMap[type]
             },
-            endPoint: { 
-                l: baseColor.lch.l + 20, 
-                c: baseColor.lch.c, 
-                h: hueMap[type] 
+            endPoint: {
+                l: Math.min(baseColor.oklch.l + 0.2, 0.95),
+                c: baseColor.oklch.c,
+                h: hueMap[type]
             }
         });
 
@@ -1067,13 +1067,12 @@ export class IndicationRow extends ScalesRow {
     }
 
     generateScale() {
-        // Generate a scale of 3 colors
+        // Generate a scale of 3 colours: dark, base, bright
         const { startPoint, endPoint } = this.config;
-        
         this.colors = [
-            new colorUtils.Color('lch', [startPoint.l, startPoint.c, startPoint.h]),
+            new colorUtils.Color('oklch', [startPoint.l, startPoint.c, startPoint.h]),
             this.sourceColor,
-            new colorUtils.Color('lch', [endPoint.l, endPoint.c, endPoint.h])
+            new colorUtils.Color('oklch', [endPoint.l, endPoint.c, endPoint.h])
         ];
     }
 
@@ -1120,17 +1119,17 @@ export class IndicationRow extends ScalesRow {
             swatch.setAttribute('tabindex', '0');
             
             // Calculate lightness for contrast
-            const lightness = color.lch.l;
+            const lightness = color.oklch.l;
             
             // Add copy and check icons
             const copyIcon = uiManager.createCopyIcon();
-            copyIcon.style.color = lightness > 50 ? 'black' : 'white';
+            copyIcon.style.color = lightness > 0.5 ? 'black' : 'white';
             copyIcon.classList.add('copy-icon');
             copyIcon.setAttribute('aria-hidden', 'true');
             swatch.appendChild(copyIcon);
 
             const checkIcon = uiManager.createCheckIcon();
-            checkIcon.style.color = lightness > 50 ? 'black' : 'white';
+            checkIcon.style.color = lightness > 0.5 ? 'black' : 'white';
             checkIcon.classList.add('check-icon');
             checkIcon.setAttribute('aria-hidden', 'true');
             swatch.appendChild(checkIcon);
@@ -1140,7 +1139,7 @@ export class IndicationRow extends ScalesRow {
             hexValueContainer.className = 'hex-value-container';
             const hexValue = document.createElement('span');
             hexValue.className = 'hex-value';
-            hexValue.style.color = lightness > 50 ? 'black' : 'white';
+            hexValue.style.color = lightness > 0.5 ? 'black' : 'white';
             hexValue.textContent = hexColor;
             hexValueContainer.appendChild(hexValue);
             swatch.appendChild(hexValueContainer);
@@ -1189,24 +1188,24 @@ export class IndicationRow extends ScalesRow {
     update(primaryColor, secondaryColor) {
         if (!primaryColor || !secondaryColor) return;
 
-        const avgLightness = (primaryColor.lch.l + secondaryColor.lch.l) / 2;
-        const maxChroma = Math.max(primaryColor.lch.c, secondaryColor.lch.c);
+        const avgLightness = (primaryColor.oklch.l + secondaryColor.oklch.l) / 2;
+        const maxChroma = Math.max(primaryColor.oklch.c, secondaryColor.oklch.c);
 
         // Update source color while maintaining fixed hue
-        this.sourceColor = new colorUtils.Color('lch', [
+        this.sourceColor = new colorUtils.Color('oklch', [
             avgLightness,
             maxChroma,
             this.hueMap[this.type]
         ]);
 
-        // Update start and end points
+        // Update start and end points (OKLCH L is 0–1)
         this.config.startPoint = {
-            l: avgLightness - 20,
+            l: Math.max(avgLightness - 0.2, 0.05),
             c: maxChroma,
             h: this.hueMap[this.type]
         };
         this.config.endPoint = {
-            l: avgLightness + 20,
+            l: Math.min(avgLightness + 0.2, 0.95),
             c: maxChroma,
             h: this.hueMap[this.type]
         };
